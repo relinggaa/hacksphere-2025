@@ -19,5 +19,11 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Seed stasiun dan kereta data
+        $this->call([
+            StasiunSeeder::class,
+            KeretaSeeder::class,
+        ]);
     }
 }

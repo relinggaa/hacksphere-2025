@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 import StationSelectionModal from './components/StationSelectionModal';
 import CalendarModal from './components/CalendarModal';
 import FilterModal from './components/FilterModal';
@@ -36,6 +37,12 @@ export default function PesanTiket() {
         selectedTimes: [],
         selectedTrains: []
     });
+
+    // State untuk data stasiun dari API
+    const [stations, setStations] = useState([]);
+    const [allStations, setAllStations] = useState([]);
+    const [recentSearches, setRecentSearches] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     // Data ketersediaan route kereta (simulasi)
     const routeAvailability = {
@@ -100,29 +107,63 @@ export default function PesanTiket() {
         '2025-10-31': { min: 195, max: 575 }
     };
 
-    const stations = [
-        { id: 1, name: 'Gambir', code: 'GMR', city: 'Jakarta', isPopular: true },
-        { id: 2, name: 'Pasar Senen', code: 'PSE', city: 'Jakarta Pusat', isPopular: true },
-        { id: 3, name: 'Bandung', code: 'BD', city: 'Bandung', isPopular: true },
-        { id: 4, name: 'Yogyakarta Tugu', code: 'YK', city: 'Yogyakarta', isPopular: false },
-        { id: 5, name: 'Solobalapan', code: 'SLO', city: 'Solo', isPopular: true },
-        { id: 6, name: 'Surabaya Gubeng', code: 'SGU', city: 'Surabaya', isPopular: true },
-        { id: 7, name: 'Surabaya Pasar Turi', code: 'SPT', city: 'Surabaya', isPopular: false },
-        { id: 8, name: 'Malang', code: 'MLG', city: 'Malang', isPopular: false },
-        { id: 9, name: 'Semarang Tawang', code: 'SMT', city: 'Semarang', isPopular: false },
-        { id: 10, name: 'Cirebon', code: 'CN', city: 'Cirebon', isPopular: false },
-        { id: 11, name: 'Purwokerto', code: 'PWT', city: 'Purwokerto', isPopular: false },
-        { id: 12, name: 'Jember', code: 'JMR', city: 'Jember', isPopular: false },
-        { id: 13, name: 'Probolinggo', code: 'PB', city: 'Probolinggo', isPopular: false },
-        { id: 14, name: 'Kediri', code: 'KD', city: 'Kediri', isPopular: false },
-        { id: 15, name: 'Madiun', code: 'MDN', city: 'Madiun', isPopular: false }
-    ];
-    const recentSearches = [
-        { id: 1, name: 'Pasar Senen', code: 'PSE', city: 'Jakarta Pusat' },
-        { id: 2, name: 'Solobalapan', code: 'SLO', city: 'Solo' },
-        { id: 3, name: 'Bandung', code: 'BD', city: 'Bandung' }
-    ];
-    const popularStations = stations.filter(station => station.isPopular);
+    // Fetch data stasiun dari API
+    useEffect(() => {
+        fetchStations();
+        fetchAllStations();
+        loadRecentSearches();
+    }, []);
+
+    const fetchStations = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get('/api/user/stations');
+            if (response.data.success) {
+                setStations(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching stations:', error);
+            // Fallback ke data kosong jika API gagal
+            setStations([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchAllStations = async () => {
+        try {
+            const response = await axios.get('/api/user/stations/all');
+            if (response.data.success) {
+                setAllStations(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching all stations:', error);
+            setAllStations([]);
+        }
+    };
+
+    const loadRecentSearches = () => {
+        // Load dari localStorage
+        const saved = localStorage.getItem('recentStationSearches');
+        if (saved) {
+            try {
+                setRecentSearches(JSON.parse(saved));
+            } catch (error) {
+                console.error('Error parsing recent searches:', error);
+                setRecentSearches([]);
+            }
+        }
+    };
+
+    const saveToRecentSearches = (station) => {
+        const newRecentSearches = [
+            station,
+            ...recentSearches.filter(item => item.id !== station.id)
+        ].slice(0, 5); // Simpan maksimal 5 pencarian terakhir
+        
+        setRecentSearches(newRecentSearches);
+        localStorage.setItem('recentStationSearches', JSON.stringify(newRecentSearches));
+    };
     const filteredStations = stations.filter(station =>
         station.name.toLowerCase().includes(modalState.searchQuery.toLowerCase()) ||
         station.city.toLowerCase().includes(modalState.searchQuery.toLowerCase())
@@ -173,6 +214,10 @@ export default function PesanTiket() {
         } else if (modalState.type === 'tujuan') {
             setFormData(prev => ({ ...prev, tujuan: station.name }));
         }
+        
+        // Simpan ke recent searches
+        saveToRecentSearches(station);
+        
         closeModal();
     };
 
@@ -181,8 +226,8 @@ export default function PesanTiket() {
     };
 
     const handleClearRecentSearches = () => {
-        // Implementasi untuk menghapus pencarian terakhir
-        console.log('Hapus semua pencarian terakhir');
+        setRecentSearches([]);
+        localStorage.removeItem('recentStationSearches');
     };
 
     // Calendar functions
@@ -482,10 +527,11 @@ export default function PesanTiket() {
                 onStationSelect={handleStationSelect}
                 searchQuery={modalState.searchQuery}
                 onSearchChange={handleSearchChange}
-                stations={stations}
+                stations={filteredStations}
+                allStations={allStations}
                 recentSearches={recentSearches}
-                popularStations={popularStations}
                 onClearRecentSearches={handleClearRecentSearches}
+                loading={loading}
             />
 
             {/* Modal Kalender */}

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StasiunController;
 use App\Http\Controllers\KeretaController;
+use App\Http\Controllers\Api\StasiunController as ApiStasiunController;
 use Inertia\Inertia;
 
 // Route sederhana untuk testing
@@ -49,6 +50,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/user/pesan-tiket', function () {
             return Inertia::render('User/PesanTiket');
         })->name('user.pesan-tiket');
+        
+        // API routes for user
+        Route::get('/api/user/stations', [ApiStasiunController::class, 'index'])->name('api.user.stations');
+        Route::get('/api/user/stations/all', [ApiStasiunController::class, 'all'])->name('api.user.stations.all');
     });
     
     // Generic dashboard route that redirects based on role

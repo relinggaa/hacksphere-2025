@@ -7,16 +7,14 @@ export default function StationSelectionModal({
     searchQuery, 
     onSearchChange, 
     stations, 
+    allStations,
     recentSearches, 
-    popularStations, 
-    onClearRecentSearches 
+    onClearRecentSearches,
+    loading = false
 }) {
     if (!isOpen) return null;
 
-    const filteredStations = stations.filter(station =>
-        station.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        station.city.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Stations sudah difilter di parent component
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
@@ -78,11 +76,11 @@ export default function StationSelectionModal({
                                 </div>
                             </div>
 
-                            {/* Stasiun Populer */}
+                            {/* Semua Stasiun */}
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Stasiun Populer</h3>
-                                <div className="space-y-2">
-                                    {popularStations.map((station) => (
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Semua Stasiun</h3>
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
+                                    {allStations.map((station) => (
                                         <StationItem 
                                             key={station.id} 
                                             station={station} 
@@ -95,9 +93,13 @@ export default function StationSelectionModal({
                     ) : (
                         /* Hasil Pencarian */
                         <div>
-                            {filteredStations.length > 0 ? (
+                            {loading ? (
+                                <div className="flex justify-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                </div>
+                            ) : stations.length > 0 ? (
                                 <div className="space-y-2">
-                                    {filteredStations.map((station) => (
+                                    {stations.map((station) => (
                                         <StationItem 
                                             key={station.id} 
                                             station={station} 
