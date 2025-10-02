@@ -4,7 +4,9 @@ export default function CalendarModal({
     isOpen, 
     onClose, 
     selectedDate, 
+    selectedReturnDate,
     currentMonth, 
+    calendarType,
     onDateSelect, 
     onNavigateMonth, 
     onOpenFilter, 
@@ -65,7 +67,9 @@ export default function CalendarModal({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
-                    <h2 className="text-lg font-semibold text-gray-800">Pilih tanggal</h2>
+                            <h2 className="text-lg font-semibold text-gray-800">
+                                {calendarType === 'pulang' ? 'Pilih tanggal pulang' : 'Pilih tanggal berangkat'}
+                            </h2>
                     <button
                         onClick={onOpenFilter}
                         className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
@@ -157,7 +161,9 @@ export default function CalendarModal({
                                 // Days of the month
                                 for (let day = 1; day <= daysInMonth; day++) {
                                     const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-                                    const isSelected = date.toDateString() === selectedDate.toDateString();
+                                    const isSelected = calendarType === 'pulang' 
+                                        ? (selectedReturnDate && date.toDateString() === selectedReturnDate.toDateString())
+                                        : date.toDateString() === selectedDate.toDateString();
                                     const isToday = date.toDateString() === new Date().toDateString();
                                     const isWeekend = date.getDay() === 0; // Sunday
                                     const routeAvailable = isRouteAvailable(date);

@@ -9,6 +9,7 @@ export default function PesanTiket() {
         keberangkatan: '',
         tujuan: '',
         tanggal: '2025-10-02',
+        tanggalPulang: '',
         dewasa: 1,
         bayi: 0,
         pulangPergi: false
@@ -24,6 +25,7 @@ export default function PesanTiket() {
         isOpen: false,
         type: '', // 'berangkat' atau 'pulang'
         selectedDate: new Date(2025, 9, 2), // 2 Oktober 2025
+        selectedReturnDate: null, // Tanggal pulang
         currentMonth: new Date(2025, 9, 1) // Oktober 2025
     });
 
@@ -201,17 +203,27 @@ export default function PesanTiket() {
     };
 
     const handleDateSelect = (date) => {
-        setCalendarModal(prev => ({
-            ...prev,
-            selectedDate: date
-        }));
-        
-        // Update form data
         const formattedDate = date.toISOString().split('T')[0];
-        setFormData(prev => ({
-            ...prev,
-            tanggal: formattedDate
-        }));
+        
+        if (calendarModal.type === 'pulang') {
+            setCalendarModal(prev => ({
+                ...prev,
+                selectedReturnDate: date
+            }));
+            setFormData(prev => ({
+                ...prev,
+                tanggalPulang: formattedDate
+            }));
+        } else {
+            setCalendarModal(prev => ({
+                ...prev,
+                selectedDate: date
+            }));
+            setFormData(prev => ({
+                ...prev,
+                tanggal: formattedDate
+            }));
+        }
         
         closeCalendarModal();
     };
@@ -399,6 +411,28 @@ export default function PesanTiket() {
                         </div>
                     </div>
 
+                    {/* Field Tanggal Pulang - Muncul jika Pulang Pergi aktif */}
+                    {formData.pulangPergi && (
+                        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+                            <div className="flex items-center">
+                                <div className="w-6 h-6 bg-green-600 rounded-lg flex items-center justify-center mr-3">
+                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <button
+                                    onClick={() => openCalendarModal('pulang')}
+                                    className="text-left hover:text-gray-600 transition-colors flex-1"
+                                >
+                                    <span className="text-sm font-medium text-gray-800 block">Tanggal Pulang</span>
+                                    <span className="text-sm text-gray-800 font-medium">
+                                        {formData.tanggalPulang ? formatDate(calendarModal.selectedReturnDate || new Date(formData.tanggalPulang)) : 'Pilih tanggal pulang'}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="bg-white border border-gray-200 rounded-2xl p-4">
                         <div className="flex items-center">
                             <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
@@ -459,7 +493,9 @@ export default function PesanTiket() {
                 isOpen={calendarModal.isOpen}
                 onClose={closeCalendarModal}
                 selectedDate={calendarModal.selectedDate}
+                selectedReturnDate={calendarModal.selectedReturnDate}
                 currentMonth={calendarModal.currentMonth}
+                calendarType={calendarModal.type}
                 onDateSelect={handleDateSelect}
                 onNavigateMonth={navigateMonth}
                 onOpenFilter={openFilterModal}
