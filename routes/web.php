@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StasiunController;
 use App\Http\Controllers\KeretaController;
+use App\Http\Controllers\TiketAntarKotaController;
+use App\Http\Controllers\TiketCommuterController;
+use App\Http\Controllers\TiketLrtController;
+use App\Http\Controllers\TiketBandaraController;
 use Inertia\Inertia;
 
 // Route sederhana untuk testing
@@ -61,6 +65,44 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/keretas/{id}', [KeretaController::class, 'show'])->name('keretas.show');
         Route::put('/api/keretas/{id}', [KeretaController::class, 'update'])->name('keretas.update');
         Route::delete('/api/keretas/{id}', [KeretaController::class, 'destroy'])->name('keretas.destroy');
+        
+        // Tiket Antar Kota routes - only accessible by admin
+        Route::get('/api/tiket-antar-kotas', [TiketAntarKotaController::class, 'index'])->name('tiket-antar-kotas.index');
+        Route::post('/api/tiket-antar-kotas', [TiketAntarKotaController::class, 'store'])->name('tiket-antar-kotas.store');
+        Route::get('/api/tiket-antar-kotas/{id}', [TiketAntarKotaController::class, 'show'])->name('tiket-antar-kotas.show');
+        Route::put('/api/tiket-antar-kotas/{id}', [TiketAntarKotaController::class, 'update'])->name('tiket-antar-kotas.update');
+        Route::delete('/api/tiket-antar-kotas/{id}', [TiketAntarKotaController::class, 'destroy'])->name('tiket-antar-kotas.destroy');
+        
+        // Tiket Commuter routes - only accessible by admin
+        Route::get('/api/tiket-commuters', [TiketCommuterController::class, 'index'])->name('tiket-commuters.index');
+        Route::post('/api/tiket-commuters', [TiketCommuterController::class, 'store'])->name('tiket-commuters.store');
+        Route::get('/api/tiket-commuters/{id}', [TiketCommuterController::class, 'show'])->name('tiket-commuters.show');
+        Route::put('/api/tiket-commuters/{id}', [TiketCommuterController::class, 'update'])->name('tiket-commuters.update');
+        Route::delete('/api/tiket-commuters/{id}', [TiketCommuterController::class, 'destroy'])->name('tiket-commuters.destroy');
+        
+        // Tiket LRT routes - only accessible by admin
+        Route::get('/api/tiket-lrt', [TiketLrtController::class, 'index'])->name('tiket-lrt.index');
+        Route::post('/api/tiket-lrt', [TiketLrtController::class, 'store'])->name('tiket-lrt.store');
+        Route::get('/api/tiket-lrt/{id}', [TiketLrtController::class, 'show'])->name('tiket-lrt.show');
+        Route::put('/api/tiket-lrt/{id}', [TiketLrtController::class, 'update'])->name('tiket-lrt.update');
+        Route::delete('/api/tiket-lrt/{id}', [TiketLrtController::class, 'destroy'])->name('tiket-lrt.destroy');
+        
+        // Tiket Bandara routes - only accessible by admin
+        Route::get('/api/tiket-bandara', [TiketBandaraController::class, 'index'])->name('tiket-bandara.index');
+        Route::post('/api/tiket-bandara', [TiketBandaraController::class, 'store'])->name('tiket-bandara.store');
+        Route::get('/api/tiket-bandara/{id}', [TiketBandaraController::class, 'show'])->name('tiket-bandara.show');
+        Route::put('/api/tiket-bandara/{id}', [TiketBandaraController::class, 'update'])->name('tiket-bandara.update');
+        Route::delete('/api/tiket-bandara/{id}', [TiketBandaraController::class, 'destroy'])->name('tiket-bandara.destroy');
+        
+        // Additional routes for dropdown data
+        Route::get('/api/dropdown/keretas', [TiketAntarKotaController::class, 'getKeretas'])->name('dropdown.keretas');
+        Route::get('/api/dropdown/stasiuns', [TiketAntarKotaController::class, 'getStasiuns'])->name('dropdown.stasiuns');
+        Route::get('/api/dropdown/commuter-keretas', [TiketCommuterController::class, 'getKeretas'])->name('dropdown.commuter-keretas');
+        Route::get('/api/dropdown/commuter-stasiuns', [TiketCommuterController::class, 'getStasiuns'])->name('dropdown.commuter-stasiuns');
+        Route::get('/api/dropdown/lrt-keretas', [TiketLrtController::class, 'getKeretas'])->name('dropdown.lrt-keretas');
+        Route::get('/api/dropdown/lrt-stasiuns', [TiketLrtController::class, 'getStasiuns'])->name('dropdown.lrt-stasiuns');
+        Route::get('/api/dropdown/bandara-keretas', [TiketBandaraController::class, 'getKeretas'])->name('dropdown.bandara-keretas');
+        Route::get('/api/dropdown/bandara-stasiuns', [TiketBandaraController::class, 'getStasiuns'])->name('dropdown.bandara-stasiuns');
     });
 });
 
