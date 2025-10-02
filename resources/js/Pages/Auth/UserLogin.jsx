@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 
 export default function UserLogin() {
@@ -9,6 +9,47 @@ export default function UserLogin() {
     });
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
+    const [formKey, setFormKey] = useState(Date.now()); // Key untuk force re-render
+
+    // Reset session dan clear form saat component mount
+    useEffect(() => {
+        // Clear localStorage
+        localStorage.clear();
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Clear any cookies related to authentication
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Force clear form dengan timeout untuk memastikan DOM sudah ready
+        setTimeout(() => {
+            // Reset form data ke nilai kosong
+            setData({
+                email: '',
+                password: '',
+                remember: false
+            });
+            
+            // Clear errors
+            setErrors({});
+            
+            // Reset processing state
+            setProcessing(false);
+            
+            // Force re-render form
+            setFormKey(Date.now());
+            
+            // Clear any form elements directly
+            const emailInput = document.querySelector('input[name="email"]');
+            const passwordInput = document.querySelector('input[name="password"]');
+            
+            if (emailInput) emailInput.value = '';
+            if (passwordInput) passwordInput.value = '';
+        }, 100);
+    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -45,44 +86,48 @@ export default function UserLogin() {
                 <div className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8"></div>
                 <div className="bg-white rounded-t-3xl px-6 py-8 min-h-[60vh] shadow-2xl">
                     <div className="text-center mb-8">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2 text-left">
                             Selamat Datang Di Access!
                         </h1>
-                        <p className="text-gray-600 text-sm leading-relaxed">
+                        <p className="text-gray-600 text-sm leading-relaxed text-left">
                             Login atau Register sekarang! untuk menikmati<br />
                             Semua fitur yang tersedia di Access.
                         </p>
                     </div>
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form key={formKey} onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-light text-gray-700 mb-2">
                                 Email / No. Telp
                             </label>
                             <input
+                                key={`email-${formKey}`}
                                 type="email"
                                 name="email"
                                 value={data.email}
                                 onChange={handleChange}
                                 className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400 text-base"
-                                placeholder="Masukkan Email atau No. Telp anda"
+                                placeholder="Masukkan email atau no telp anda"
                                 required
+                                autoComplete="off"
                             />
                             {errors.email && (
                                 <p className="text-red-500 text-sm mt-2">{errors.email}</p>
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-light text-gray-700 mb-2">
                                 Password
                             </label>
                             <input
+                                key={`password-${formKey}`}
                                 type="password"
                                 name="password"
                                 value={data.password}
                                 onChange={handleChange}
                                 className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400 text-base"
-                                placeholder="Masukkan Password anda"
+                                placeholder="Masukkan password"
                                 required
+                                autoComplete="off"
                             />
                             {errors.password && (
                                 <p className="text-red-500 text-sm mt-2">{errors.password}</p>
