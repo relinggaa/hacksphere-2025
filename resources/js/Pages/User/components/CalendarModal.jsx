@@ -7,9 +7,11 @@ export default function CalendarModal({
     selectedReturnDate,
     currentMonth, 
     calendarType,
+    isRoundTrip,
     onDateSelect, 
     onNavigateMonth, 
-    onOpenFilter, 
+    onOpenFilter,
+    onSwitchCalendarType, 
     routeAvailability,
     priceData,
     selectedPrices 
@@ -54,30 +56,41 @@ export default function CalendarModal({
         return null;
     };
 
+    // Format tanggal untuk tab (format pendek)
+    const formatDateForTab = (date) => {
+        if (!date) return null;
+        const day = date.getDate().toString().padStart(2, '0');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day} ${month} ${year}`;
+    };
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
             <div className="bg-white rounded-t-3xl w-full max-h-[85vh] flex flex-col">
                 {/* Header Modal */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                    <button
-                        onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center"
-                    >
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                            <h2 className="text-lg font-semibold text-gray-800">
-                                {calendarType === 'pulang' ? 'Pilih tanggal pulang' : 'Pilih tanggal berangkat'}
-                            </h2>
-                    <button
-                        onClick={onOpenFilter}
-                        className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
-                    >
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
-                    </button>
+                <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                        <button
+                            onClick={onClose}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <h2 className="text-lg font-semibold text-gray-800">Pilih Tanggal</h2>
+                        <button
+                            onClick={onOpenFilter}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                        </button>
+                    </div>
+
                 </div>
 
                 {/* Info Banner */}
@@ -93,25 +106,50 @@ export default function CalendarModal({
                 {/* Date Selection Tabs */}
                 <div className="p-4">
                     <div className="flex space-x-4 mb-6">
+                        {/* Tab Berangkat */}
                         <div className="flex-1">
                             <div className="text-center">
                                 <span className="text-sm text-gray-600 block mb-1">Berangkat</span>
-                                <button className="w-full py-3 px-4 border-2 border-blue-600 text-blue-600 rounded-xl font-medium">
-                                    02 Okt 2025
+                                <button 
+                                    onClick={() => onSwitchCalendarType('berangkat')}
+                                    className={`w-full py-3 px-4 border-2 rounded-xl font-medium transition-all ${
+                                        calendarType === 'berangkat' || calendarType === '' 
+                                            ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                                            : 'border-gray-300 text-gray-600 bg-white hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {formatDateForTab(selectedDate) || '02 Okt 2025'}
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-1">
-                            <div className="text-center">
-                                <span className="text-sm text-gray-600 block mb-1">Pulang</span>
-                                <button className="w-full py-3 px-4 bg-blue-100 text-blue-600 rounded-xl font-medium flex items-center justify-center">
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    Tanggal Pulang
-                                </button>
+                        
+                        {/* Tab Pulang - hanya tampil jika round trip */}
+                        {isRoundTrip && (
+                            <div className="flex-1">
+                                <div className="text-center">
+                                    <span className="text-sm text-gray-600 block mb-1">Pulang</span>
+                                    <button 
+                                        onClick={() => onSwitchCalendarType('pulang')}
+                                        className={`w-full py-3 px-4 border-2 rounded-xl font-medium flex items-center justify-center transition-all ${
+                                            calendarType === 'pulang' 
+                                                ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                                                : 'border-gray-300 text-gray-600 bg-white hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {selectedReturnDate ? (
+                                            formatDateForTab(selectedReturnDate)
+                                        ) : (
+                                            <>
+                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                </svg>
+                                                Tanggal Pulang
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Calendar Navigation */}

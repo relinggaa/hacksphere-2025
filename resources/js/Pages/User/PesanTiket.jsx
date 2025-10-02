@@ -496,9 +496,11 @@ export default function PesanTiket() {
                 selectedReturnDate={calendarModal.selectedReturnDate}
                 currentMonth={calendarModal.currentMonth}
                 calendarType={calendarModal.type}
+                isRoundTrip={formData.pulangPergi}
                 onDateSelect={handleDateSelect}
                 onNavigateMonth={navigateMonth}
                 onOpenFilter={openFilterModal}
+                onSwitchCalendarType={(type) => setCalendarModal(prev => ({ ...prev, type }))}
                 routeAvailability={routeAvailability}
                 priceData={priceData}
                 selectedPrices={filterModal.selectedPrices}
