@@ -69,6 +69,35 @@ export default function PesanTiket() {
         '2025-10-30': true,
         '2025-10-31': true
     };
+
+    // Data harga kereta per tanggal (simulasi dalam ribuan)
+    const priceData = {
+        '2025-10-01': { min: 150, max: 450 },
+        '2025-10-02': { min: 180, max: 520 },
+        '2025-10-04': { min: 160, max: 480 },
+        '2025-10-05': { min: 140, max: 420 },
+        '2025-10-07': { min: 170, max: 500 },
+        '2025-10-08': { min: 155, max: 465 },
+        '2025-10-09': { min: 165, max: 485 },
+        '2025-10-10': { min: 175, max: 525 },
+        '2025-10-12': { min: 145, max: 435 },
+        '2025-10-14': { min: 185, max: 545 },
+        '2025-10-15': { min: 160, max: 480 },
+        '2025-10-16': { min: 150, max: 450 },
+        '2025-10-17': { min: 170, max: 510 },
+        '2025-10-19': { min: 190, max: 560 },
+        '2025-10-21': { min: 155, max: 455 },
+        '2025-10-22': { min: 165, max: 495 },
+        '2025-10-23': { min: 175, max: 515 },
+        '2025-10-24': { min: 180, max: 530 },
+        '2025-10-25': { min: 160, max: 470 },
+        '2025-10-26': { min: 170, max: 500 },
+        '2025-10-28': { min: 185, max: 545 },
+        '2025-10-29': { min: 175, max: 525 },
+        '2025-10-30': { min: 165, max: 485 },
+        '2025-10-31': { min: 195, max: 575 }
+    };
+
     const stations = [
         { id: 1, name: 'Gambir', code: 'GMR', city: 'Jakarta', isPopular: true },
         { id: 2, name: 'Pasar Senen', code: 'PSE', city: 'Jakarta Pusat', isPopular: true },
@@ -435,6 +464,8 @@ export default function PesanTiket() {
                 onNavigateMonth={navigateMonth}
                 onOpenFilter={openFilterModal}
                 routeAvailability={routeAvailability}
+                priceData={priceData}
+                selectedPrices={filterModal.selectedPrices}
             />
 
             {/* Modal Filter */}

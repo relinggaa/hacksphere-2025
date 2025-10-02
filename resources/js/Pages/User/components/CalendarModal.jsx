@@ -8,7 +8,9 @@ export default function CalendarModal({
     onDateSelect, 
     onNavigateMonth, 
     onOpenFilter, 
-    routeAvailability 
+    routeAvailability,
+    priceData,
+    selectedPrices 
 }) {
     if (!isOpen) return null;
 
@@ -29,6 +31,25 @@ export default function CalendarModal({
     const isRouteAvailable = (date) => {
         const dateKey = date.toISOString().split('T')[0];
         return routeAvailability[dateKey] !== undefined ? routeAvailability[dateKey] : true;
+    };
+
+    // Get price to display based on filter selection
+    const getPriceToDisplay = (date) => {
+        const dateKey = date.toISOString().split('T')[0];
+        const prices = priceData[dateKey];
+        
+        if (!prices || !selectedPrices || selectedPrices.length === 0) {
+            return null;
+        }
+
+        // Check if user selected price sorting
+        if (selectedPrices.includes('termahal')) {
+            return `${prices.max}k`;
+        } else if (selectedPrices.includes('termurah')) {
+            return `${prices.min}k`;
+        }
+        
+        return null;
     };
 
     return (
@@ -140,12 +161,15 @@ export default function CalendarModal({
                                     const isToday = date.toDateString() === new Date().toDateString();
                                     const isWeekend = date.getDay() === 0; // Sunday
                                     const routeAvailable = isRouteAvailable(date);
+                                    const priceToShow = getPriceToDisplay(date);
                                     
                                     days.push(
                                         <button
                                             key={day}
                                             onClick={() => onDateSelect(date)}
-                                            className={`h-12 w-full rounded-full flex flex-col items-center justify-center text-sm font-medium transition-colors relative ${
+                                            className={`w-full rounded-full flex flex-col items-center justify-center text-xs font-medium transition-colors relative ${
+                                                priceToShow ? 'h-16 py-1' : 'h-12'
+                                            } ${
                                                 isSelected
                                                     ? 'bg-blue-600 text-white'
                                                     : isWeekend
@@ -153,10 +177,22 @@ export default function CalendarModal({
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
-                                            <span className="mb-1">{day}</span>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${
-                                                routeAvailable ? 'bg-green-500' : 'bg-red-500'
-                                            } ${isSelected ? 'bg-white' : ''}`}></div>
+                                            <span className={priceToShow ? 'mb-0.5' : 'mb-1'}>{day}</span>
+                                            {routeAvailable && (
+                                                <div className={`w-1.5 h-1.5 rounded-full ${
+                                                    'bg-green-500'
+                                                } ${isSelected ? 'bg-white' : ''} ${priceToShow ? 'mb-0.5' : ''}`}></div>
+                                            )}
+                                            {!routeAvailable && (
+                                                <div className={`w-1.5 h-1.5 rounded-full bg-red-500 ${isSelected ? 'bg-white' : ''} ${priceToShow ? 'mb-0.5' : ''}`}></div>
+                                            )}
+                                            {priceToShow && routeAvailable && (
+                                                <span className={`text-xs font-semibold ${
+                                                    isSelected ? 'text-white' : 'text-green-600'
+                                                }`}>
+                                                    {priceToShow}
+                                                </span>
+                                            )}
                                         </button>
                                     );
                                 }
