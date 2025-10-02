@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StasiunController;
+use App\Http\Controllers\KeretaController;
 use Inertia\Inertia;
 
 // Route sederhana untuk testing
@@ -44,6 +46,22 @@ Route::middleware('auth')->group(function () {
     
     // Generic dashboard route that redirects based on role
     Route::get('/dashboard', [AuthController::class, 'dashboard']);
+    
+    // Stasiun routes - only accessible by admin
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/api/stasiuns', [StasiunController::class, 'index'])->name('stasiuns.index');
+        Route::post('/api/stasiuns', [StasiunController::class, 'store'])->name('stasiuns.store');
+        Route::get('/api/stasiuns/{id}', [StasiunController::class, 'show'])->name('stasiuns.show');
+        Route::put('/api/stasiuns/{id}', [StasiunController::class, 'update'])->name('stasiuns.update');
+        Route::delete('/api/stasiuns/{id}', [StasiunController::class, 'destroy'])->name('stasiuns.destroy');
+        
+        // Kereta routes - only accessible by admin
+        Route::get('/api/keretas', [KeretaController::class, 'index'])->name('keretas.index');
+        Route::post('/api/keretas', [KeretaController::class, 'store'])->name('keretas.store');
+        Route::get('/api/keretas/{id}', [KeretaController::class, 'show'])->name('keretas.show');
+        Route::put('/api/keretas/{id}', [KeretaController::class, 'update'])->name('keretas.update');
+        Route::delete('/api/keretas/{id}', [KeretaController::class, 'destroy'])->name('keretas.destroy');
+    });
 });
 
 // Root route - redirect to appropriate dashboard or login
