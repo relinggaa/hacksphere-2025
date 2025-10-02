@@ -42,6 +42,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/dashboard', [AuthController::class, 'dashboard'])->middleware('role:user');
     Route::get('/porter/dashboard', [AuthController::class, 'dashboard'])->middleware('role:porter');
     
+    // User specific routes
+    Route::middleware('role:user')->group(function () {
+        Route::get('/user/pesan-tiket', function () {
+            return Inertia::render('User/PesanTiket');
+        })->name('user.pesan-tiket');
+    });
+    
     // Generic dashboard route that redirects based on role
     Route::get('/dashboard', [AuthController::class, 'dashboard']);
 });

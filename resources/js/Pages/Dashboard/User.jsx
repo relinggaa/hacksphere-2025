@@ -8,6 +8,10 @@ export default function UserDashboard({ user }) {
         }
     };
 
+    const handleAntarKota = () => {
+        router.get('/user/pesan-tiket');
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800">
             <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 px-4 pt-12 pb-6">
@@ -99,8 +103,8 @@ export default function UserDashboard({ user }) {
 
             <div className="bg-white px-4 py-6">
                 <div className="grid grid-cols-5 gap-4 mb-8">
-                    <div className="text-center">
-                        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-2 mx-auto">
+                    <div className="text-center cursor-pointer" onClick={handleAntarKota}>
+                        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-2 mx-auto hover:bg-blue-700 transition-colors">
                             <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
                             </svg>
