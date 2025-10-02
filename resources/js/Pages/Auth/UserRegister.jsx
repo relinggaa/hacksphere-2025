@@ -12,39 +12,6 @@ export default function UserRegister() {
     const [processing, setProcessing] = useState(false);
     const [formKey, setFormKey] = useState(Date.now());
 
-    // Reset session dan clear form saat component mount
-    useEffect(() => {
-        // Clear localStorage
-        localStorage.clear();
-        
-        // Clear sessionStorage
-        sessionStorage.clear();
-        
-        // Clear any cookies related to authentication
-        document.cookie.split(";").forEach(function(c) { 
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-        });
-        
-        // Force clear form dengan timeout untuk memastikan DOM sudah ready
-        setTimeout(() => {
-            // Reset form data ke nilai kosong
-            setData({
-                name: '',
-                email: '',
-                password: '',
-                password_confirmation: ''
-            });
-            
-            // Clear errors
-            setErrors({});
-            
-            // Reset processing state
-            setProcessing(false);
-            
-            // Force re-render form
-            setFormKey(Date.now());
-        }, 100);
-    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -53,7 +20,6 @@ export default function UserRegister() {
 
         router.post('/user/register', data, {
             onSuccess: (page) => {
-                // Show success alert
                 alert('Registrasi berhasil! Selamat datang di KAI Access. Selamat menikmati perjalanan Anda!');
             },
             onError: (errors) => {
@@ -65,7 +31,6 @@ export default function UserRegister() {
             }
         });
     };
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setData(prev => ({
@@ -76,12 +41,8 @@ export default function UserRegister() {
 
     return (
         <div className="min-h-screen bg-white">
-            {/* Header dengan back button */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <button 
-                    onClick={() => window.history.back()}
-                    className="flex items-center text-gray-600 hover:text-gray-800"
-                >
+                <button onClick={() => window.history.back()} className="flex items-center text-gray-600 hover:text-gray-800">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
@@ -104,13 +65,12 @@ export default function UserRegister() {
                 </div>
 
                 <form key={formKey} onSubmit={handleSubmit} className="space-y-6">
-                    {/* Name */}
+        
                     <div>
                         <label className="block text-sm font-light text-gray-700 mb-2">
                             Nama Lengkap
                         </label>
-                        <input
-                            key={`name-${formKey}`}
+                        <input key={`name-${formKey}`}
                             type="text"
                             name="name"
                             value={data.name}
@@ -125,7 +85,6 @@ export default function UserRegister() {
                         )}
                     </div>
 
-                    {/* Email */}
                     <div>
                         <label className="block text-sm font-light text-gray-700 mb-2">
                             Alamat Email
@@ -146,23 +105,6 @@ export default function UserRegister() {
                         )}
                     </div>
 
-                    {/* Email Verification Info */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start space-x-3">
-                        <div className="flex-shrink-0">
-                            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-sm text-blue-700 leading-relaxed">
-                                Pastikan email kamu aktif, ya! Kode verifikasi akan dikirim ke alamat yang didaftarkan.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Password */}
                     <div>
                         <label className="block text-sm font-light text-gray-700 mb-2">
                             Password
@@ -182,8 +124,6 @@ export default function UserRegister() {
                             <p className="text-red-500 text-sm mt-2">{errors.password}</p>
                         )}
                     </div>
-
-                    {/* Confirm Password */}
                     <div>
                         <label className="block text-sm font-light text-gray-700 mb-2">
                             Konfirmasi Password
@@ -204,19 +144,12 @@ export default function UserRegister() {
                         )}
                     </div>
                 </form>
-
-                {/* Submit Button - Fixed at bottom */}
                 <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-200">
-                    <button
-                        onClick={handleSubmit}
-                        disabled={processing}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-lg"
+                    <button onClick={handleSubmit} disabled={processing} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-lg"
                     >
                         {processing ? 'Memproses...' : 'LANJUTKAN'}
                     </button>
                 </div>
-
-                {/* Spacer untuk fixed button */}
                 <div className="pb-24"></div>
             </div>
         </div>
