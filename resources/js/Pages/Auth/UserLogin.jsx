@@ -39,130 +39,100 @@ export default function UserLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-                <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-            </div>
-            
-            {/* Main Container with Glassmorphism */}
-            <div className="relative bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8 w-full max-w-md">
-                {/* Header */}
-                <div className="text-center mb-10">
-                    <div className="relative inline-block mb-6">
-                        <div className="bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400 text-white text-3xl font-bold py-4 px-8 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300 animate-float">
-                            🚂 KAI Access
+        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-6 bg-transparent z-50"></div>
+            <div className="flex flex-col min-h-screen">
+                <div className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8"></div>
+                <div className="bg-white rounded-t-3xl px-6 py-8 min-h-[60vh] shadow-2xl">
+                    <div className="text-center mb-8">
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                            Selamat Datang Di Access!
+                        </h1>
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                            Login atau Register sekarang! untuk menikmati<br />
+                            Semua fitur yang tersedia di Access.
+                        </p>
+                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Email / No. Telp
+                            </label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={data.email}
+                                onChange={handleChange}
+                                className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400 text-base"
+                                placeholder="Masukkan Email atau No. Telp anda"
+                                required
+                            />
+                            {errors.email && (
+                                <p className="text-red-500 text-sm mt-2">{errors.email}</p>
+                            )}
                         </div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-2xl mb-6 inline-flex items-center border border-white/30">
-                        <span className="text-2xl mr-3">👤</span>
-                        <span className="font-semibold text-lg">Portal Penumpang</span>
-                    </div>
-                    <h2 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                        Login Penumpang
-                    </h2>
-                    <p className="text-blue-100 text-lg">Masuk untuk memesan tiket dan menggunakan layanan kereta</p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-white mb-3">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={data.email}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-white placeholder-white/70 transition-all duration-300"
-                            placeholder="user@example.com"
-                            required
-                        />
-                        {errors.email && (
-                            <p className="text-red-300 text-sm mt-2">{errors.email}</p>
-                        )}
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                        <label className="block text-sm font-medium text-white mb-3">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={data.password}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-white placeholder-white/70 transition-all duration-300"
-                            placeholder="Masukkan password Anda"
-                            required
-                        />
-                        {errors.password && (
-                            <p className="text-red-300 text-sm mt-2">{errors.password}</p>
-                        )}
-                    </div>
-
-                    {/* Remember Me */}
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            name="remember"
-                            checked={data.remember}
-                            onChange={handleChange}
-                            className="h-4 w-4 text-blue-400 focus:ring-blue-400 border-white/30 rounded bg-white/20"
-                        />
-                        <label className="ml-3 block text-sm text-white">
-                            Ingat saya
-                        </label>
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 shadow-lg"
-                    >
-                        {processing ? 'Memproses...' : 'Masuk'}
-                    </button>
-                </form>
-
-                {/* Links */}
-                <div className="mt-8 space-y-4">
-                    <div className="text-center">
-                        <p className="text-white/80">
-                            Belum punya akun?{' '}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                name="password"
+                                value={data.password}
+                                onChange={handleChange}
+                                className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400 text-base"
+                                placeholder="Masukkan Password anda"
+                                required
+                            />
+                            {errors.password && (
+                                <p className="text-red-500 text-sm mt-2">{errors.password}</p>
+                            )}
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-lg"
+                        >
+                            {processing ? 'Memproses...' : 'MASUK'}
+                        </button>
+                    </form>
+                    <div className="text-center mt-6">
+                        <p className="text-gray-600 text-sm">
+                            Belum punya akun Access?{' '}
                             <a
                                 href="/user/register"
-                                className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors duration-300"
+                                className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
                             >
-                                Daftar sebagai penumpang
+                                Daftar Sekarang
                             </a>
                         </p>
                     </div>
-                    
-                    <div className="text-center">
+                    <div className="text-center mt-6 mb-6">
+                        <span className="text-gray-400 text-sm">Atau gunakan akun</span>
+                    </div>
+                    <button className="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-sm">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Sign in with Google</span>
+                    </button>
+                    <div className="text-center mt-8">
                         <a
-                            href="/login"
-                            className="text-white/60 hover:text-white/80 text-sm transition-colors duration-300"
+                            href="#"
+                            className="inline-flex items-center text-gray-500 hover:text-gray-700 text-sm transition-colors duration-300"
                         >
-                            ← Kembali ke pilihan role
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                            </svg>
+                            Mengalami Kendala? Hubungi Kami
+                            <svg className="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
                         </a>
                     </div>
-                </div>
-
-                {/* Features */}
-                <div className="mt-8 p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
-                    <h4 className="font-medium text-white text-lg mb-4 text-center">Fitur Penumpang:</h4>
-                    <ul className="text-sm text-white/80 space-y-3">
-                        <li className="flex items-center"><span className="mr-3 text-lg">🎫</span> Pesan tiket kereta online</li>
-                        <li className="flex items-center"><span className="mr-3 text-lg">📅</span> Lihat jadwal kereta real-time</li>
-                        <li className="flex items-center"><span className="mr-3 text-lg">🎒</span> Pesan layanan porter</li>
-                        <li className="flex items-center"><span className="mr-3 text-lg">📋</span> Riwayat perjalanan</li>
-                        <li className="flex items-center"><span className="mr-3 text-lg">💳</span> Pembayaran digital</li>
-                    </ul>
                 </div>
             </div>
         </div>
