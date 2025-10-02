@@ -35,8 +35,8 @@ export default function PesanTiket() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600">
-            <div className="bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600 px-4 pt-12 pb-6">
+        <div className="min-h-screen bg-blue-600">
+            <div className="bg-blue-600 px-4 pt-12 pb-6">
                 <div className="flex items-center mb-6">
                     <button 
                         onClick={handleBack}
