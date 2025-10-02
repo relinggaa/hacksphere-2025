@@ -30,6 +30,7 @@ export default function PesanTiket() {
     const [filterModal, setFilterModal] = useState({
         isOpen: false,
         selectedClasses: [],
+        selectedPrices: [],
         selectedTimes: [],
         selectedTrains: []
     });
@@ -222,9 +223,30 @@ export default function PesanTiket() {
     const toggleFilterOption = (category, value) => {
         setFilterModal(prev => {
             const currentSelection = prev[category];
-            const newSelection = currentSelection.includes(value)
-                ? currentSelection.filter(item => item !== value)
-                : [...currentSelection, value];
+            let newSelection;
+
+            if (category === 'selectedPrices') {
+                // Handle price filters with special logic for radio buttons
+                if (value === 'termahal' || value === 'termurah') {
+                    // For sorting options (radio behavior), remove other sort options
+                    const filteredSelection = currentSelection.filter(item => 
+                        item !== 'termahal' && item !== 'termurah'
+                    );
+                    newSelection = currentSelection.includes(value)
+                        ? filteredSelection
+                        : [...filteredSelection, value];
+                } else {
+                    // For range options (checkbox behavior)
+                    newSelection = currentSelection.includes(value)
+                        ? currentSelection.filter(item => item !== value)
+                        : [...currentSelection, value];
+                }
+            } else {
+                // Default checkbox behavior for other categories
+                newSelection = currentSelection.includes(value)
+                    ? currentSelection.filter(item => item !== value)
+                    : [...currentSelection, value];
+            }
             
             return {
                 ...prev,
@@ -237,6 +259,7 @@ export default function PesanTiket() {
         setFilterModal(prev => ({
             ...prev,
             selectedClasses: [],
+            selectedPrices: [],
             selectedTimes: [],
             selectedTrains: []
         }));
@@ -419,6 +442,7 @@ export default function PesanTiket() {
                 isOpen={filterModal.isOpen}
                 onClose={closeFilterModal}
                 selectedClasses={filterModal.selectedClasses}
+                selectedPrices={filterModal.selectedPrices}
                 onToggleFilter={toggleFilterOption}
                 onReset={resetFilters}
                 onApply={applyFilters}
