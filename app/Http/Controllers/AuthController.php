@@ -11,89 +11,66 @@ use Inertia\Inertia;
 
 class AuthController extends Controller
 {
-    /**
-     * Show role selection page
-     */
+
     public function showRoleSelection()
     {
         return Inertia::render('Auth/RoleSelection');
     }
 
-    /**
-     * Show admin login form
-     */
+ 
     public function showAdminLogin()
     {
         return Inertia::render('Auth/AdminLogin');
     }
 
-    /**
-     * Show admin register form
-     */
+   
     public function showAdminRegister()
     {
         return Inertia::render('Auth/AdminRegister');
     }
 
-    /**
-     * Show user login form
-     */
     public function showUserLogin()
     {
         return Inertia::render('Auth/UserLogin');
     }
 
-    /**
-     * Show user register form
-     */
+ 
     public function showUserRegister()
     {
         return Inertia::render('Auth/UserRegister');
     }
 
-    /**
-     * Show porter login form
-     */
+  
     public function showPorterLogin()
     {
         return Inertia::render('Auth/PorterLogin');
     }
 
-    /**
-     * Show porter register form
-     */
+
     public function showPorterRegister()
     {
         return Inertia::render('Auth/PorterRegister');
     }
 
-    /**
-     * Handle admin login
-     */
+ 
     public function adminLogin(Request $request)
     {
         return $this->handleRoleLogin($request, 'admin');
     }
 
-    /**
-     * Handle user login
-     */
+   
     public function userLogin(Request $request)
     {
         return $this->handleRoleLogin($request, 'user');
     }
 
-    /**
-     * Handle porter login
-     */
+ 
     public function porterLogin(Request $request)
     {
         return $this->handleRoleLogin($request, 'porter');
     }
 
-    /**
-     * Generic login handler for specific role
-     */
+   
     private function handleRoleLogin(Request $request, string $role)
     {
         $request->validate([
@@ -101,7 +78,6 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // Check if user exists with the specified role
         $user = User::where('email', $request->email)
                    ->where('role', $role)
                    ->first();
@@ -116,37 +92,28 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect based on role
         return redirect($this->getRedirectUrl($user->role));
     }
 
-    /**
-     * Handle admin register
-     */
+ 
     public function adminRegister(Request $request)
     {
         return $this->handleRoleRegister($request, 'admin');
     }
 
-    /**
-     * Handle user register
-     */
+   
     public function userRegister(Request $request)
     {
         return $this->handleRoleRegister($request, 'user');
     }
 
-    /**
-     * Handle porter register
-     */
+
     public function porterRegister(Request $request)
     {
         return $this->handleRoleRegister($request, 'porter');
     }
 
-    /**
-     * Generic register handler for specific role
-     */
+
     private function handleRoleRegister(Request $request, string $role)
     {
         $request->validate([
@@ -167,9 +134,7 @@ class AuthController extends Controller
         return redirect($this->getRedirectUrl($user->role));
     }
 
-    /**
-     * Handle logout request
-     */
+
     public function logout(Request $request)
     {
         Auth::logout();
@@ -180,9 +145,7 @@ class AuthController extends Controller
         return redirect('/login');
     }
 
-    /**
-     * Get redirect URL based on role
-     */
+
     private function getRedirectUrl($role)
     {
         return match($role) {
@@ -194,9 +157,7 @@ class AuthController extends Controller
     }
 
 
-    /**
-     * Show dashboard based on role
-     */
+  
     public function dashboard()
     {
         $user = Auth::user();
