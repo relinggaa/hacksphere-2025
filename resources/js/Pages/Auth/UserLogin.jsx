@@ -143,7 +143,7 @@ export default function UserLogin() {
                     </form>
                     <div className="text-center mt-6">
                         <p className="text-gray-600 text-sm">
-                            Belum punya akun Access?{' '}
+                            
                             <a
                                 href="/user/register"
                                 className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
