@@ -5756,10 +5756,10 @@ export default function AdminDashboard({ user }) {
                             </button>
                         </div>
 
-                        {/* Modal Body */}
+                        
                         <form onSubmit={editingBandaraTiket ? handleUpdateBandaraTiket : handleBandaraSubmit} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Nama Kereta Field - Dropdown Search */}
+                        
                                 <div>
                                     <label htmlFor="nama_kereta" className="block text-sm font-medium text-gray-700 mb-1">
                                         Nama Kereta <span className="text-red-500">*</span>
@@ -6124,7 +6124,7 @@ export default function AdminDashboard({ user }) {
                                 </table>
                             </div>
 
-                            {/* Pagination Controls */}
+                           
                             {totalBandaraPages > 1 && (
                                 <div className="flex items-center justify-between mt-4 px-4 py-3 bg-white border-t border-gray-200">
                                     <div className="flex items-center text-sm text-gray-700">
@@ -6136,7 +6136,7 @@ export default function AdminDashboard({ user }) {
                                         </span>
                                     </div>
                                     <div className="flex items-center space-x-2">
-                                        {/* Previous Button */}
+                                       
                                         <button
                                             onClick={goToPreviousBandaraPage}
                                             disabled={currentBandaraPage === 1}
