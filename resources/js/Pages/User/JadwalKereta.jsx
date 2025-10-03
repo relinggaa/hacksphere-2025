@@ -10,6 +10,13 @@ export default function JadwalKereta({ searchData = {} }) {
     // Debug: Log the search data and selected date
     console.log('JadwalKereta - searchData:', searchData);
     console.log('JadwalKereta - selectedDate:', selectedDate);
+    
+    // Set initial selectedDate when component mounts
+    useEffect(() => {
+        if (searchData.tanggal) {
+            setSelectedDate(searchData.tanggal);
+        }
+    }, [searchData.tanggal]);
     const [showExpired, setShowExpired] = useState(false);
 
     // Generate date options (selected date + 7 days)
@@ -71,8 +78,10 @@ export default function JadwalKereta({ searchData = {} }) {
 
     // Fetch schedules based on search criteria
     useEffect(() => {
-        fetchSchedules();
-    }, [selectedDate]);
+        if (selectedDate && searchData.keberangkatan && searchData.tujuan) {
+            fetchSchedules();
+        }
+    }, [selectedDate, searchData.keberangkatan, searchData.tujuan, searchData.dewasa, searchData.bayi]);
 
     const fetchSchedules = async () => {
         try {
@@ -91,19 +100,48 @@ export default function JadwalKereta({ searchData = {} }) {
             
             console.log('API params:', params);
             
-            const response = await axios.get(`/api/public/schedules`, { params });
+            // Use absolute URL to avoid URL construction issues
+            const apiUrl = '/api/public/schedules';
+            console.log('Making request to:', apiUrl);
+            
+            // Create axios instance with explicit configuration for simulator safety
+            let axiosInstance = axios;
+            try {
+                // Test if baseURL is valid
+                new URL(axios.defaults.baseURL);
+            } catch (e) {
+                console.log('Invalid baseURL detected, creating new instance');
+                axiosInstance = axios.create({
+                    baseURL: 'http://localhost:8000',
+                    timeout: 10000,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+            }
+            
+            const response = await axiosInstance.get(apiUrl, { params });
             
             console.log('API response:', response.data);
             
-            if (response.data.success) {
-                setSchedules(response.data.data);
-                console.log('Schedules found:', response.data.data.length);
+            if (response.data && response.data.success) {
+                setSchedules(response.data.data || []);
+                console.log('Schedules found:', response.data.data ? response.data.data.length : 0);
             } else {
-                console.log('No schedules found or API error');
+                console.log('No schedules found or API error:', response.data);
                 setSchedules([]);
             }
         } catch (error) {
             console.error('Error fetching schedules:', error);
+            if (error.response) {
+                console.error('Response error:', error.response.data);
+            } else if (error.request) {
+                console.error('Request error:', error.request);
+            } else {
+                console.error('Error:', error.message);
+            }
             setSchedules([]);
         } finally {
             setLoading(false);
@@ -206,7 +244,7 @@ export default function JadwalKereta({ searchData = {} }) {
                     <div className="text-center py-8">
                         <div className="text-gray-500 mb-4">Tidak ada jadwal tersedia untuk tanggal ini</div>
                         <button 
-                            onClick={() => router.get('/user/pesan-tiket')}
+                            onClick={() => router.visit('/public/pesan-tiket')}
                             className="bg-blue-600 text-white px-6 py-2 rounded-lg"
                         >
                             Ubah Pencarian
@@ -276,7 +314,7 @@ export default function JadwalKereta({ searchData = {} }) {
                                     <div className="text-right">
                                         <div className="text-sm text-gray-500">Harga Mulai Dari</div>
                                         <div className="text-lg font-semibold text-gray-900">
-                                            Rp{schedule.harga_termurah.toLocaleString('id-ID')} / Pax
+                                            Rp{parseFloat(schedule.harga_termurah).toLocaleString('id-ID')} / Pax
                                         </div>
                                     </div>
                                 </div>

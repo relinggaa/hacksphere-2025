@@ -73,6 +73,7 @@ export default function PesanTiket() {
             const startDate = new Date(2025, 9, 1); // October 1, 2025
             const endDate = new Date(2025, 10, 30); // November 30, 2025
             
+            console.log('Fetching route availability for:', fromStation, '→', toStation);
             const response = await axios.get(`/api/public/availability`, {
                 params: {
                     stasiun_asal: fromStation,
