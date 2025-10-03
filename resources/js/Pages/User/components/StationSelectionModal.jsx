@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import Fuse from 'fuse.js';
 
 export default function StationSelectionModal({ 
     isOpen, 
@@ -12,9 +13,106 @@ export default function StationSelectionModal({
     onClearRecentSearches,
     loading = false
 }) {
-    if (!isOpen) return null;
+    const [suggestion, setSuggestion] = useState(null);
+    const [fuse, setFuse] = useState(null);
 
-    // Stations sudah difilter di parent component
+    // Smart mapping untuk nama kota alternatif
+    const cityAliasMap = {
+        'surakarta': ['solo', 'sala', 'surakarta hadiningrat'],
+        'jogya': ['yogyakarta', 'jogja', 'diy', 'ngayogyakarta'],
+        'diy': ['yogyakarta', 'jogja', 'yogya', 'ngayogyakarta'],
+        'betawi': ['jakarta', 'dki jakarta', 'ibukota', 'jkt', 'jabodetabek'],
+        'ibukota': ['jakarta', 'dki jakarta', 'betawi', 'jkt', 'jabodetabek'],
+        'jkt': ['jakarta', 'dki jakarta', 'betawi', 'ibukota', 'jabodetabek'],
+        'bdg': ['bandung', 'kota kembang', 'paris van java'],
+        'kota kembang': ['bandung', 'bdg', 'paris van java'],
+        'sby': ['surabaya', 'suroboyo', 'kota pahlawan', 'arek suroboyo'],
+        'suroboyo': ['surabaya', 'sby', 'kota pahlawan', 'arek suroboyo'],
+        'kota pahlawan': ['surabaya', 'sby', 'suroboyo', 'arek suroboyo'],
+        'smg': ['semarang', 'kota lumpia'],
+        'kota lumpia': ['semarang', 'smg'],
+        'sala': ['solo', 'surakarta', 'surakarta hadiningrat']
+    };
+
+    // Initialize Fuse.js dengan semua stasiun
+    useEffect(() => {
+        if (allStations.length > 0) {
+            const fuseOptions = {
+                keys: [
+                    { name: 'name', weight: 0.7 },
+                    { name: 'city', weight: 0.3 }
+                ],
+                threshold: 0.4, // Lower threshold = more strict matching
+                includeScore: true,
+                includeMatches: true,
+                minMatchCharLength: 2
+            };
+            
+            setFuse(new Fuse(allStations, fuseOptions));
+        }
+    }, [allStations]);
+
+    // Smart NLS Logic untuk single best suggestion
+    useEffect(() => {
+        if (searchQuery && searchQuery.length >= 2 && fuse) {
+            const searchLower = searchQuery.toLowerCase();
+            let bestSuggestion = null;
+            let bestScore = 1.0; // Higher score = worse match
+            
+            // 1. Cari dengan Fuse.js (fuzzy search)
+            const fuseResults = fuse.search(searchQuery);
+            
+            // 2. Cari berdasarkan city alias mapping
+            const aliasMatches = [];
+            Object.keys(cityAliasMap).forEach(alias => {
+                if (alias.includes(searchLower) || searchLower.includes(alias)) {
+                    const targetCities = cityAliasMap[alias];
+                    targetCities.forEach(targetCity => {
+                        const matchingStations = allStations.filter(station => 
+                            station.city.toLowerCase().includes(targetCity.toLowerCase()) ||
+                            station.name.toLowerCase().includes(targetCity.toLowerCase())
+                        );
+                        aliasMatches.push(...matchingStations);
+                    });
+                }
+            });
+            
+            // 3. Evaluasi hasil Fuse.js
+            if (fuseResults.length > 0) {
+                const topFuseResult = fuseResults[0];
+                if (topFuseResult.score > 0.2 && topFuseResult.score < 0.8) {
+                    bestSuggestion = {
+                        text: `Mungkin maksud Anda: ${topFuseResult.item.name}`,
+                        station: topFuseResult.item,
+                        type: 'fuzzy'
+                    };
+                    bestScore = topFuseResult.score;
+                }
+            }
+            
+            // 4. Evaluasi hasil alias mapping (prioritas lebih tinggi)
+            if (aliasMatches.length > 0) {
+                // Pilih stasiun pertama dari kota yang cocok
+                const firstAliasMatch = aliasMatches[0];
+                const aliasScore = 0.05; // Score sangat rendah untuk alias match
+                
+                if (aliasScore < bestScore) {
+                    bestSuggestion = {
+                        text: `Stasiun di ${firstAliasMatch.city}: ${firstAliasMatch.name}`,
+                        station: firstAliasMatch,
+                        type: 'alias'
+                    };
+                    bestScore = aliasScore;
+                }
+            }
+            
+            setSuggestion(bestSuggestion);
+        } else {
+            setSuggestion(null);
+        }
+    }, [searchQuery, fuse, allStations]);
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
@@ -49,6 +147,43 @@ export default function StationSelectionModal({
                         />
                     </div>
                 </div>
+
+                {/* Single Best Suggestion */}
+                {suggestion && (
+                    <div className="px-4 pb-2">
+                        <button
+                            onClick={() => onStationSelect(suggestion.station)}
+                            className={`w-full text-left p-3 border-2 rounded-xl hover:bg-opacity-80 transition-colors ${
+                                suggestion.type === 'alias' 
+                                    ? 'bg-green-50 border-green-200 hover:bg-green-100' 
+                                    : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                            }`}
+                        >
+                            <div className="flex items-center">
+                                {suggestion.type === 'alias' ? (
+                                    <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                )}
+                                <div className="flex-1">
+                                    <span className={`font-medium ${
+                                        suggestion.type === 'alias' ? 'text-green-700' : 'text-blue-700'
+                                    }`}>
+                                        {suggestion.text}
+                                    </span>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        {suggestion.station.code} • {suggestion.station.city}
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                )}
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto px-4 pb-4">

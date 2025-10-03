@@ -4,6 +4,7 @@ import axios from 'axios';
 import StationSelectionModal from './components/StationSelectionModal';
 import CalendarModal from './components/CalendarModal';
 import FilterModal from './components/FilterModal';
+import PassengerSelectionModal from './components/PassengerSelectionModal';
 
 export default function PesanTiket() {
     const [formData, setFormData] = useState({
@@ -36,6 +37,10 @@ export default function PesanTiket() {
         selectedPrices: [],
         selectedTimes: [],
         selectedTrains: []
+    });
+
+    const [passengerModal, setPassengerModal] = useState({
+        isOpen: false
     });
 
     // State untuk data stasiun dari API
@@ -356,6 +361,23 @@ export default function PesanTiket() {
         closeFilterModal();
     };
 
+    // Passenger modal functions
+    const openPassengerModal = () => {
+        setPassengerModal({ isOpen: true });
+    };
+
+    const closePassengerModal = () => {
+        setPassengerModal({ isOpen: false });
+    };
+
+    const handlePassengerChange = (passengers) => {
+        setFormData(prev => ({
+            ...prev,
+            dewasa: passengers.dewasa,
+            bayi: passengers.bayi
+        }));
+    };
+
 
     return (
         <div className="min-h-screen bg-blue-600">
@@ -479,17 +501,27 @@ export default function PesanTiket() {
                     )}
 
                     <div className="bg-white border border-gray-200 rounded-2xl p-4">
-                        <div className="flex items-center">
+                        <button 
+                            onClick={openPassengerModal}
+                            className="w-full flex items-center hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+                        >
                             <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                                 <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                                 </svg>
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 text-left">
                                 <span className="text-sm font-medium text-gray-800 block mb-1">Pilih Penumpang</span>
-                                <span className="text-sm text-gray-800 font-medium">01 Dewasa, 00 Bayi</span>
+                                <span className="text-sm text-gray-800 font-medium">
+                                    {formData.dewasa.toString().padStart(2, '0')} Dewasa, {formData.bayi.toString().padStart(2, '0')} Bayi
+                                </span>
                             </div>
-                        </div>
+                            <div className="ml-2">
+                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </div>
+                        </button>
                     </div>
 
                     <button
@@ -561,6 +593,17 @@ export default function PesanTiket() {
                 onToggleFilter={toggleFilterOption}
                 onReset={resetFilters}
                 onApply={applyFilters}
+            />
+
+            {/* Modal Pilih Penumpang */}
+            <PassengerSelectionModal
+                isOpen={passengerModal.isOpen}
+                onClose={closePassengerModal}
+                onPassengerChange={handlePassengerChange}
+                currentPassengers={{
+                    dewasa: formData.dewasa,
+                    bayi: formData.bayi
+                }}
             />
         </div>
     );

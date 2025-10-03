@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StasiunController;
 use App\Http\Controllers\KeretaController;
 use App\Http\Controllers\Api\StasiunController as ApiStasiunController;
+use App\Http\Controllers\Api\ChatbotController;
 use Inertia\Inertia;
 
 // Route sederhana untuk testing
@@ -54,6 +55,10 @@ Route::middleware('auth')->group(function () {
         // API routes for user
         Route::get('/api/user/stations', [ApiStasiunController::class, 'index'])->name('api.user.stations');
         Route::get('/api/user/stations/all', [ApiStasiunController::class, 'all'])->name('api.user.stations.all');
+        
+        // API routes untuk chatbot
+        Route::post('/api/user/chatbot/chat', [ChatbotController::class, 'chat'])->name('api.user.chatbot.chat');
+        Route::get('/api/user/chatbot/health', [ChatbotController::class, 'health'])->name('api.user.chatbot.health');
     });
     
     // Generic dashboard route that redirects based on role
