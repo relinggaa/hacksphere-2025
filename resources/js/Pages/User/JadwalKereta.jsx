@@ -91,7 +91,7 @@ export default function JadwalKereta({ searchData = {} }) {
             
             console.log('API params:', params);
             
-            const response = await axios.get(`${window.location.origin}/api/public/schedules`, { params });
+            const response = await axios.get(`/api/public/schedules`, { params });
             
             console.log('API response:', response.data);
             

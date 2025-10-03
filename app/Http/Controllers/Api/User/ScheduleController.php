@@ -14,9 +14,9 @@ class ScheduleController extends Controller
     public function getSchedules(Request $request)
     {
         try {
-            $stasiunAsal = $request->input('stasiun_asal');
-            $stasiunTujuan = $request->input('stasiun_tujuan');
-            $tanggal = $request->input('tanggal');
+            $stasiunAsal = trim((string) $request->input('stasiun_asal'));
+            $stasiunTujuan = trim((string) $request->input('stasiun_tujuan'));
+            $tanggal = trim((string) $request->input('tanggal'));
             $penumpang = $request->input('penumpang', 1);
 
             // Debug: Log the input parameters
@@ -35,14 +35,31 @@ class ScheduleController extends Controller
                 ], 400);
             }
 
-            // Use query builder to get schedules
-            $schedules = DB::table('tiket_antar_kotas')
+            // Use query builder to get schedules (exact match first)
+            $baseQuery = DB::table('tiket_antar_kotas')
+                ->whereDate('tanggal', $tanggal)
+                ->where('penumpang', '>=', $penumpang);
+
+            $schedules = (clone $baseQuery)
                 ->where('stasiun_asal', $stasiunAsal)
                 ->where('stasiun_tujuan', $stasiunTujuan)
-                ->where('tanggal', $tanggal)
-                ->where('penumpang', '>=', $penumpang)
                 ->orderBy('jam')
                 ->get();
+
+            // Fallback: try LIKE matching if exact produced no rows
+            if ($schedules->isEmpty()) {
+                $schedules = (clone $baseQuery)
+                    ->where(function ($q) use ($stasiunAsal) {
+                        $q->where('stasiun_asal', 'LIKE', $stasiunAsal)
+                          ->orWhere('stasiun_asal', 'LIKE', "%$stasiunAsal%");
+                    })
+                    ->where(function ($q) use ($stasiunTujuan) {
+                        $q->where('stasiun_tujuan', 'LIKE', $stasiunTujuan)
+                          ->orWhere('stasiun_tujuan', 'LIKE', "%$stasiunTujuan%");
+                    })
+                    ->orderBy('jam')
+                    ->get();
+            }
 
             // Debug: Log the query results
             \Log::info('Query results count:', ['count' => $schedules->count()]);

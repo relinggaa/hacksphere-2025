@@ -73,7 +73,7 @@ export default function PesanTiket() {
             const startDate = new Date(2025, 9, 1); // October 1, 2025
             const endDate = new Date(2025, 10, 30); // November 30, 2025
             
-            const response = await axios.get(`${window.location.origin}/api/public/availability`, {
+            const response = await axios.get(`/api/public/availability`, {
                 params: {
                     stasiun_asal: fromStation,
                     stasiun_tujuan: toStation,
@@ -151,7 +151,7 @@ export default function PesanTiket() {
     const fetchStations = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`${window.location.origin}/api/user/stations`);
+            const response = await axios.get(`/api/user/stations`);
             if (response.data.success) {
                 setStations(response.data.data);
             }
@@ -166,7 +166,7 @@ export default function PesanTiket() {
 
     const fetchAllStations = async () => {
         try {
-            const response = await axios.get(`${window.location.origin}/api/user/stations/all`);
+            const response = await axios.get(`/api/user/stations/all`);
             if (response.data.success) {
                 setAllStations(response.data.data);
             }

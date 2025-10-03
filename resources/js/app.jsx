@@ -3,27 +3,24 @@ import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import axios from 'axios'
 
-// Configure axios base URL
-const baseURL = window.location?.origin || 'http://localhost:8000'
+// Configure axios base URL safely for simulator and browser
+const getOriginSafely = () => {
+  try {
+    if (typeof window !== 'undefined' && window.location && /^https?:\/\//.test(window.location.origin)) {
+      return window.location.origin
+    }
+  } catch (e) {}
+  return ''
+}
+const baseURL = getOriginSafely()
 axios.defaults.baseURL = baseURL
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 axios.defaults.headers.common['Accept'] = 'application/json'
 axios.defaults.headers.common['Content-Type'] = 'application/json'
 
-// Add request interceptor to handle URL construction
+// Keep a lightweight interceptor for logging only
 axios.interceptors.request.use(
-  (config) => {
-    // Ensure URL is properly constructed
-    if (config.url && !config.url.startsWith('http')) {
-      // Ensure baseURL is valid
-      if (config.baseURL && config.baseURL !== 'undefined') {
-        config.url = config.baseURL + config.url
-      } else {
-        config.url = baseURL + config.url
-      }
-    }
-    return config
-  },
+  (config) => config,
   (error) => {
     console.error('Axios request error:', error)
     return Promise.reject(error)
