@@ -26,31 +26,50 @@ class AvailabilityController extends Controller
                 ], 400);
             }
 
-            // Get availability for date range
+            // Get availability and price data for date range
             $availability = [];
+            $priceData = [];
             $currentDate = new \DateTime($startDate);
             $endDateTime = new \DateTime($endDate);
 
             while ($currentDate <= $endDateTime) {
                 $dateStr = $currentDate->format('Y-m-d');
                 
-                // Check if there are any tickets available for this date using query builder
-                $ticketCount = DB::table('tiket_antar_kotas')
+                // Get ticket data for this date using query builder
+                $tickets = DB::table('tiket_antar_kotas')
                     ->where('stasiun_asal', $stasiunAsal)
                     ->where('stasiun_tujuan', $stasiunTujuan)
                     ->where('tanggal', $dateStr)
                     ->where('penumpang', '>=', $penumpang)
-                    ->count();
+                    ->get(['harga_termurah']);
                 
-                $availability[$dateStr] = $ticketCount > 0;
+                // Check availability
+                $hasTickets = $tickets->count() > 0;
+                $availability[$dateStr] = $hasTickets;
+                
+                // Calculate price range if tickets exist
+                if ($hasTickets) {
+                    $prices = $tickets->pluck('harga_termurah')->toArray();
+                    $minPrice = min($prices);
+                    $maxPrice = max($prices);
+                    
+                    // Convert to thousands for display (divide by 1000)
+                    $priceData[$dateStr] = [
+                        'min' => round($minPrice / 1000),
+                        'max' => round($maxPrice / 1000)
+                    ];
+                }
 
                 $currentDate->add(new \DateInterval('P1D'));
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $availability,
-                'message' => 'Data ketersediaan berhasil diambil'
+                'data' => [
+                    'availability' => $availability,
+                    'priceData' => $priceData
+                ],
+                'message' => 'Data ketersediaan dan harga berhasil diambil'
             ]);
 
         } catch (\Exception $e) {

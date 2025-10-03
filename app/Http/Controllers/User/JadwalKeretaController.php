@@ -20,6 +20,13 @@ class JadwalKeretaController extends Controller
             $bayi = (int) $request->input('bayi', 0);
             $penumpang = $dewasa + $bayi;
 
+            // Filter parameters untuk filtering modal
+            $classFilter = (array) $request->input('kelas_filter', []);
+            $priceRange = (array) $request->input('harga_range', []);
+            $priceSort = $request->input('harga_sort', '');
+            $trainFilter = (array) $request->input('nama_kereta', []);
+            $timeFilter = (array) $request->input('waktu_perjalanan', []);
+
             // Prepare search parameters
             $searchData = [
                 'keberangkatan' => $stasiunAsal,
@@ -52,15 +59,57 @@ class JadwalKeretaController extends Controller
                     ->whereDate('tanggal', $tanggal)
                     ->where('penumpang', '>=', $penumpang);
 
-                // Try exact match first
-                $schedules = (clone $baseQuery)
+                // Build query with filters
+                $query = (clone $baseQuery)
                     ->where('stasiun_asal', $stasiunAsal)
-                    ->where('stasiun_tujuan', $stasiunTujuan)
-                    ->orderBy('jam')
-                    ->get();
+                    ->where('stasiun_tujuan', $stasiunTujuan);
 
-                // Fallback: try LIKE matching if exact produced no rows
-                if ($schedules->isEmpty()) {
+                // Apply class filter
+                if (!empty($classFilter)) {
+                    $query->whereIn('kelas', $classFilter);
+                }
+
+                // Apply train name filter
+                if (!empty($trainFilter)) {
+                    $query->whereIn('nama_kereta', $trainFilter);
+                }
+
+                // Apply price range filter
+                if (!empty($priceRange)) {
+                    $query->where(function($subQuery) use ($priceRange) {
+                        foreach ($priceRange as $range) {
+                            switch ($range) {
+                                case '0-100':
+                                    $subQuery->orWhereBetween('harga_termurah', [0, 100000]);
+                                    break;
+                                case '100-300':
+                                    $subQuery->orWhereBetween('harga_termurah', [100000, 300000]);
+                                    break;
+                                case '300-500':
+                                    $subQuery->orWhereBetween('harga_termurah', [300000, 500000]);
+                                    break;
+                                case '500+':
+                                    $subQuery->orWhere('harga_termurah', '>=', 500000);
+                                    break;
+                            }
+                        }
+                    });
+                }
+
+                // Apply sorting
+                if ($priceSort === 'termurah') {
+                    $query->orderBy('harga_termurah', 'asc');
+                } elseif ($priceSort === 'termahal') {
+                    $query->orderBy('harga_termurah', 'desc');
+                } else {
+                    $query->orderBy('jam', 'asc');
+                }
+
+                // Execute query
+                $schedules = $query->get();
+
+                // Fallback: try LIKE matching if exact produced no rows and no filters applied
+                if ($schedules->isEmpty() && empty($classFilter) && empty($trainFilter) && empty($priceRange)) {
                     $schedules = (clone $baseQuery)
                         ->where('stasiun_asal', 'LIKE', '%' . $stasiunAsal . '%')
                         ->where('stasiun_tujuan', 'LIKE', '%' . $stasiunTujuan . '%')
@@ -90,7 +139,14 @@ class JadwalKeretaController extends Controller
                 'searchData' => $searchData,
                 'schedules' => $schedules,
                 'hasResults' => !$schedules->isEmpty(),
-                'totalResults' => $schedules->count()
+                'totalResults' => $schedules->count(),
+                'filters' => [
+                    'classFilter' => $classFilter,
+                    'priceRange' => $priceRange,
+                    'priceSort' => $priceSort,
+                    'trainFilter' => $trainFilter,
+                    'timeFilter' => $timeFilter
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -101,7 +157,14 @@ class JadwalKeretaController extends Controller
                 'schedules' => [],
                 'hasResults' => false,
                 'totalResults' => 0,
-                'error' => 'Terjadi kesalahan saat mencari jadwal kereta'
+                'error' => 'Terjadi kesalahan saat mencari jadwal kereta',
+                'filters' => [
+                    'classFilter' => [],
+                    'priceRange' => [],
+                    'priceSort' => '',
+                    'trainFilter' => [],
+                    'timeFilter' => []
+                ]
             ]);
         }
     }

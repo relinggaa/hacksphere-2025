@@ -13,7 +13,7 @@ export default function CalendarModal({
     onOpenFilter,
     onSwitchCalendarType, 
     routeAvailability,
-    priceData,
+    priceData, // Sekarang berasal dari database
     selectedPrices,
     savedStations
 }) {
@@ -38,7 +38,7 @@ export default function CalendarModal({
         return routeAvailability[dateKey] === true;
     };
 
-    // Get price to display based on filter selection
+    // Get price to display based on filter selection (data dari database)
     const getPriceToDisplay = (date) => {
         const dateKey = date.toISOString().split('T')[0];
         const prices = priceData[dateKey];
@@ -51,6 +51,18 @@ export default function CalendarModal({
         if (selectedPrices.includes('termahal')) {
             return `${prices.max}k`;
         } else if (selectedPrices.includes('termurah')) {
+            return `${prices.min}k`;
+        }
+        
+        return null;
+    };
+
+    // Get price to display without filter (always show min price from database)
+    const getDefaultPriceDisplay = (date) => {
+        const dateKey = date.toISOString().split('T')[0];
+        const prices = priceData[dateKey];
+        
+        if (prices && prices.min) {
             return `${prices.min}k`;
         }
         
@@ -239,12 +251,12 @@ export default function CalendarModal({
                                                 )}
                                             </div>
                                             
-                                            {/* Price Display */}
-                                            {priceToShow && routeAvailable && (
+                                            {/* Price Display - sekarang dari database */}
+                                            {(priceToShow || getDefaultPriceDisplay(date)) && routeAvailable && (
                                                 <span className={`text-xs font-bold ${
                                                     isSelected ? 'text-white' : 'text-green-600'
                                                 }`}>
-                                                    {priceToShow}
+                                                    {priceToShow || getDefaultPriceDisplay(date)}
                                                 </span>
                                             )}
                                         </button>

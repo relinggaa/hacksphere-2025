@@ -40,8 +40,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/porter/register', [AuthController::class, 'porterRegister']);
     
     // Generic routes (redirect to role selection)
-    Route::get('/login', [AuthController::class, 'showRoleSelection'])->name('login');
-    Route::get('/register', [AuthController::class, 'showRoleSelection'])->name('register');
+    Route::get('/login', [AuthController::class, 'showUserLogin'])->name('login');
+    Route::get('/register', [AuthController::class, 'showRegisterUser'])->name('register');
 });
 
 Route::middleware('auth')->group(function () {
@@ -67,8 +67,7 @@ Route::middleware('auth')->group(function () {
         // API routes for user
         Route::get('/api/user/stations', [ApiStasiunController::class, 'index'])->name('api.user.stations');
         Route::get('/api/user/stations/all', [ApiStasiunController::class, 'all'])->name('api.user.stations.all');
-        Route::get('/api/user/schedules', [ScheduleController::class, 'getSchedules'])->name('api.user.schedules');
-        
+  
         // API routes untuk chatbot
         Route::post('/api/user/chatbot/chat', [ChatbotController::class, 'chat'])->name('api.user.chatbot.chat');
         Route::get('/api/user/chatbot/health', [ChatbotController::class, 'health'])->name('api.user.chatbot.health');
@@ -152,6 +151,36 @@ Route::get('/public/profile', function () {
 // Public API routes untuk jadwal kereta
 Route::get('/api/public/schedules', [App\Http\Controllers\Api\User\ScheduleController::class, 'getSchedules'])->name('api.public.schedules');
 Route::get('/api/public/availability', [App\Http\Controllers\Api\User\AvailabilityController::class, 'checkAvailability'])->name('api.public.availability');
+
+// Cart page (public)
+Route::get('/public/cart', function () {
+    return Inertia::render('User/Cart');
+})->name('public.cart');
+
+Route::get('/public/tickets', function () {
+    return Inertia::render('User/Tickets');
+})->name('public.tickets');
+
+Route::get('/public/receipt/{id}', function ($id) {
+    return Inertia::render('User/Receipt', ['id' => $id]);
+})->name('public.receipt');
+
+// API Cart (auth)
+Route::middleware('auth')->group(function () {
+    Route::get('/api/cart', [App\Http\Controllers\Api\CartController::class, 'index']);
+    Route::post('/api/cart', [App\Http\Controllers\Api\CartController::class, 'store']);
+    Route::delete('/api/cart/items/{id}', [App\Http\Controllers\Api\CartController::class, 'destroyItem']);
+    Route::delete('/api/cart/clear', [App\Http\Controllers\Api\CartController::class, 'clear']);
+
+    // Orders Antar Kota
+    Route::get('/api/orders/antar-kota', [App\Http\Controllers\Api\OrderAntarKotaController::class, 'index']);
+    Route::post('/api/orders/antar-kota', [App\Http\Controllers\Api\OrderAntarKotaController::class, 'store']);
+    Route::get('/api/orders/antar-kota/{id}', [App\Http\Controllers\Api\OrderAntarKotaController::class, 'show']);
+});
+// API routes untuk passenger groups (memerlukan authentication)
+Route::middleware('auth')->group(function () {
+    Route::apiResource('api/passenger-groups', App\Http\Controllers\Api\PassengerGroupController::class);
+});
 
 // Root route - redirect to appropriate dashboard or login
 Route::get('/', function () {

@@ -274,6 +274,17 @@ class TiketAntarKotaSeeder extends Seeder
                 'stasiun_asal' => 'Bandung',
                 'stasiun_tujuan' => 'Pasar Senen'
             ],
+            // Data dengan harga 185k untuk tanggal 15 Oktober
+            [
+                'nama_kereta' => 'LODAYA (160)',
+                'kelas' => 'Ekonomi',
+                'harga_termurah' => 185000.00,
+                'jam' => '06:15',
+                'tanggal' => '2025-10-15',
+                'penumpang' => 1,
+                'stasiun_asal' => 'Pasar Senen',
+                'stasiun_tujuan' => 'Bandung'
+            ],
             [
                 'nama_kereta' => 'CIPER (142)',
                 'kelas' => 'Bisnis',

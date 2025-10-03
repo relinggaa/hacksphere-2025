@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
+import FilterModal from './components/FilterModal';
+import TrainDetailModal from './components/TrainDetailModal';
 
-export default function JadwalKereta({ searchData = {}, schedules = [], hasResults = false, totalResults = 0, error = null }) {
+export default function JadwalKereta({ searchData = {}, schedules = [], hasResults = false, totalResults = 0, error = null, filters = {} }) {
     const [selectedDate, setSelectedDate] = useState(searchData.tanggal || '');
     const [showExpired, setShowExpired] = useState(false);
+    const [filterModal, setFilterModal] = useState({
+        isOpen: false,
+        selectedClasses: filters.classFilter || [],
+        selectedPrices: filters.priceRange || [],
+        selectedPriceSort: filters.priceSort || '',
+        selectedTrains: filters.trainFilter || [],
+        selectedTimes: filters.timeFilter || []
+    });
+
+    const [trainDetailModal, setTrainDetailModal] = useState({
+        isOpen: false,
+        trainData: null
+    });
     
     // Debug: Log the received props
-    console.log('JadwalKereta - props:', { searchData, schedules, hasResults, totalResults, error });
+    console.log('JadwalKereta - props:', { searchData, schedules, hasResults, totalResults, error, filters });
     
     // Set initial selectedDate when component mounts
     useEffect(() => {
@@ -100,13 +115,100 @@ export default function JadwalKereta({ searchData = {}, schedules = [], hasResul
     };
 
     const handleFilter = () => {
-        // Implement filter logic
-        console.log('Filter clicked');
+        setFilterModal(prev => ({ ...prev, isOpen: true }));
+    };
+
+    const toggleFilterOption = (category, value) => {
+        setFilterModal(prev => {
+            let newSelection;
+            
+            if (category === 'Classes') {
+                const currentSelection = prev.selectedClasses;
+                newSelection = currentSelection.includes(value)
+                    ? currentSelection.filter(item => item !== value)
+                    : [...currentSelection, value];
+                return { ...prev, selectedClasses: newSelection };
+            } else if (category === 'Prices') {
+                // Special handling for price sorting (radio) and price ranges (checkbox)
+                if (value === 'termahal' || value === 'termurah') {
+                    // Radio button behavior - only one can be selected
+                    const currentSort = prev.selectedPriceSort;
+                    const newSort = currentSort === value ? '' : value;
+                    return { ...prev, selectedPriceSort: newSort };
+                } else {
+                    // Checkbox behavior for price zones
+                    const currentSelection = prev.selectedPrices;
+                    newSelection = currentSelection.includes(value)
+                        ? currentSelection.filter(item => item !== value)
+                        : [...currentSelection, value];
+                    return { ...prev, selectedPrices: newSelection };
+                }
+            } else if (category === 'Trains') {
+                const currentSelection = prev.selectedTrains;
+                newSelection = currentSelection.includes(value)
+                    ? currentSelection.filter(item => item !== value)
+                    : [...currentSelection, value];
+                return { ...prev, selectedTrains: newSelection };
+            } else if (category === 'Times') {
+                const currentSelection = prev.selectedTimes;
+                newSelection = currentSelection.includes(value)
+                    ? currentSelection.filter(item => item !== value)
+                    : [...currentSelection, value];
+                return { ...prev, selectedTimes: newSelection };
+            }
+            
+            return prev;
+        });
+    };
+
+    const resetFilters = () => {
+        setFilterModal({
+            isOpen: false,
+            selectedClasses: [],
+            selectedPrices: [],
+            selectedPriceSort: '',
+            selectedTrains: [],
+            selectedTimes: []
+        });
+    };
+
+    const applyFilters = () => {
+        // Prepare filter parameters for navigation
+        const filterParams = {
+            ...searchData,
+            tanggal: selectedDate,
+            kelas_filter: filterModal.selectedClasses,
+            harga_range: filterModal.selectedPrices,
+            harga_sort: filterModal.selectedPriceSort,
+            nama_kereta: filterModal.selectedTrains,
+            waktu_perjalanan: filterModal.selectedTimes
+        };
+
+        console.log('Applying filters:', filterParams);
+        
+        // Navigate with filter parameters
+        router.visit('/public/jadwal-kereta', {
+            method: 'get',
+            data: filterParams,
+            preserveState: false
+        });
+        
+        setFilterModal(prev => ({ ...prev, isOpen: false }));
     };
 
     const handleTrainDetail = (schedule) => {
-        // Navigate to train detail page
-        console.log('Train detail:', schedule);
+        // Open train detail modal
+        setTrainDetailModal({
+            isOpen: true,
+            trainData: schedule
+        });
+    };
+
+    const closeTrainDetailModal = () => {
+        setTrainDetailModal({
+            isOpen: false,
+            trainData: null
+        });
     };
 
     const handleViewSubclass = (schedule) => {
@@ -331,6 +433,24 @@ export default function JadwalKereta({ searchData = {}, schedules = [], hasResul
                     </label>
                 </div>
             </div>
+            
+            {/* Filter Modal */}
+            <FilterModal
+                isOpen={filterModal.isOpen}
+                onClose={() => setFilterModal(prev => ({ ...prev, isOpen: false }))}
+                selectedClasses={filterModal.selectedClasses}
+                selectedPrices={filterModal.selectedPrices}
+                onToggleFilter={toggleFilterOption}
+                onReset={resetFilters}
+                onApply={applyFilters}
+            />
+
+            {/* Train Detail Modal */}
+            <TrainDetailModal
+                isOpen={trainDetailModal.isOpen}
+                onClose={closeTrainDetailModal}
+                trainData={trainDetailModal.trainData}
+            />
         </div>
     );
 }
