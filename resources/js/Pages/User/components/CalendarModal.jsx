@@ -14,7 +14,8 @@ export default function CalendarModal({
     onSwitchCalendarType, 
     routeAvailability,
     priceData,
-    selectedPrices 
+    selectedPrices,
+    savedStations
 }) {
     if (!isOpen) return null;
 
@@ -34,7 +35,7 @@ export default function CalendarModal({
 
     const isRouteAvailable = (date) => {
         const dateKey = date.toISOString().split('T')[0];
-        return routeAvailability[dateKey] !== undefined ? routeAvailability[dateKey] : true;
+        return routeAvailability[dateKey] === true;
     };
 
     // Get price to display based on filter selection
@@ -100,7 +101,14 @@ export default function CalendarModal({
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
                     </div>
-                    <span className="text-sm">Pemesanan kereta dapat dilakukan sampai dengan 17 November 2025 (H+45)</span>
+                    <div className="flex-1">
+                        <span className="text-sm block">Pemesanan kereta dapat dilakukan sampai dengan 17 November 2025 (H+45)</span>
+                        {savedStations.keberangkatan && savedStations.tujuan && (
+                            <span className="text-xs block mt-1 opacity-90">
+                                Rute: {savedStations.keberangkatan} → {savedStations.tujuan}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Date Selection Tabs */}
@@ -176,7 +184,7 @@ export default function CalendarModal({
                     {/* Calendar Grid */}
                     <div className="mb-6">
                         {/* Day Headers */}
-                        <div className="grid grid-cols-7 gap-1 mb-2">
+                        <div className="grid grid-cols-7 gap-1 mb-3">
                             {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day) => (
                                 <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
                                     {day}
@@ -193,7 +201,7 @@ export default function CalendarModal({
                                 
                                 // Empty cells for days before month starts
                                 for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
-                                    days.push(<div key={`empty-${i}`} className="h-12"></div>);
+                                    days.push(<div key={`empty-${i}`} className="h-16"></div>);
                                 }
                                 
                                 // Days of the month
@@ -211,27 +219,29 @@ export default function CalendarModal({
                                         <button
                                             key={day}
                                             onClick={() => onDateSelect(date)}
-                                            className={`w-full rounded-full flex flex-col items-center justify-center text-xs font-medium transition-colors relative ${
-                                                priceToShow ? 'h-16 py-1' : 'h-12'
-                                            } ${
+                                            className={`w-full h-16 rounded-xl flex flex-col items-center justify-center text-sm font-medium transition-all duration-200 relative ${
                                                 isSelected
-                                                    ? 'bg-blue-600 text-white'
+                                                    ? 'bg-blue-600 text-white shadow-lg transform scale-105'
                                                     : isWeekend
-                                                    ? 'text-red-500 hover:bg-red-50'
-                                                    : 'text-gray-700 hover:bg-gray-100'
+                                                    ? 'text-red-500 hover:bg-red-50 hover:shadow-md'
+                                                    : 'text-gray-700 hover:bg-gray-100 hover:shadow-md'
                                             }`}
                                         >
-                                            <span className={priceToShow ? 'mb-0.5' : 'mb-1'}>{day}</span>
-                                            {routeAvailable && (
-                                                <div className={`w-1.5 h-1.5 rounded-full ${
-                                                    'bg-green-500'
-                                                } ${isSelected ? 'bg-white' : ''} ${priceToShow ? 'mb-0.5' : ''}`}></div>
-                                            )}
-                                            {!routeAvailable && (
-                                                <div className={`w-1.5 h-1.5 rounded-full bg-red-500 ${isSelected ? 'bg-white' : ''} ${priceToShow ? 'mb-0.5' : ''}`}></div>
-                                            )}
+                                            {/* Date Number */}
+                                            <span className="text-sm font-semibold mb-1">{day}</span>
+                                            
+                                            {/* Availability Dot */}
+                                            <div className="flex items-center justify-center mb-1">
+                                                {routeAvailable ? (
+                                                    <div className={`w-2 h-2 rounded-full bg-green-500 ${isSelected ? 'bg-white' : ''}`}></div>
+                                                ) : (
+                                                    <div className={`w-2 h-2 rounded-full bg-red-500 ${isSelected ? 'bg-white' : ''}`}></div>
+                                                )}
+                                            </div>
+                                            
+                                            {/* Price Display */}
                                             {priceToShow && routeAvailable && (
-                                                <span className={`text-xs font-semibold ${
+                                                <span className={`text-xs font-bold ${
                                                     isSelected ? 'text-white' : 'text-green-600'
                                                 }`}>
                                                     {priceToShow}

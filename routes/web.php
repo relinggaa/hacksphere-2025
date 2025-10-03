@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StasiunController;
 use App\Http\Controllers\KeretaController;
 use App\Http\Controllers\Api\StasiunController as ApiStasiunController;
+use App\Http\Controllers\Api\User\ScheduleController;
+use App\Http\Controllers\Api\User\AvailabilityController;
 use App\Http\Controllers\Api\ChatbotController;
 use App\Http\Controllers\TiketAntarKotaController;
 use App\Http\Controllers\TiketCommuterController;
@@ -56,9 +58,16 @@ Route::middleware('auth')->group(function () {
             return Inertia::render('User/PesanTiket');
         })->name('user.pesan-tiket');
         
+        Route::get('/user/jadwal-kereta', function () {
+            return Inertia::render('User/JadwalKereta', [
+                'searchData' => request()->all()
+            ]);
+        })->name('user.jadwal-kereta');
+        
         // API routes for user
         Route::get('/api/user/stations', [ApiStasiunController::class, 'index'])->name('api.user.stations');
         Route::get('/api/user/stations/all', [ApiStasiunController::class, 'all'])->name('api.user.stations.all');
+        Route::get('/api/user/schedules', [ScheduleController::class, 'getSchedules'])->name('api.user.schedules');
         
         // API routes untuk chatbot
         Route::post('/api/user/chatbot/chat', [ChatbotController::class, 'chat'])->name('api.user.chatbot.chat');
@@ -122,6 +131,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/dropdown/bandara-stasiuns', [TiketBandaraController::class, 'getStasiuns'])->name('dropdown.bandara-stasiuns');
     });
 });
+
+// Public API routes for testing
+Route::get('/api/public/schedules', [ScheduleController::class, 'getSchedules'])->name('api.public.schedules');
+Route::get('/api/public/availability', [AvailabilityController::class, 'checkAvailability'])->name('api.public.availability');
+
+// Public routes for testing
+Route::get('/public/pesan-tiket', function () {
+    return Inertia::render('User/PesanTiket');
+})->name('public.pesan-tiket');
+
+Route::get('/public/jadwal-kereta', function () {
+    return Inertia::render('User/JadwalKereta', [
+        'searchData' => request()->all()
+    ]);
+})->name('public.jadwal-kereta');
 
 // Root route - redirect to appropriate dashboard or login
 Route::get('/', function () {

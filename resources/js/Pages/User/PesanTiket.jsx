@@ -10,7 +10,7 @@ export default function PesanTiket() {
     const [formData, setFormData] = useState({
         keberangkatan: '',
         tujuan: '',
-        tanggal: '2025-10-02',
+        tanggal: '',
         tanggalPulang: '',
         dewasa: 1,
         bayi: 0,
@@ -26,9 +26,9 @@ export default function PesanTiket() {
     const [calendarModal, setCalendarModal] = useState({
         isOpen: false,
         type: '', // 'berangkat' atau 'pulang'
-        selectedDate: new Date(2025, 9, 2), // 2 Oktober 2025
+        selectedDate: new Date(), // Today's date
         selectedReturnDate: null, // Tanggal pulang
-        currentMonth: new Date(2025, 9, 1) // Oktober 2025
+        currentMonth: new Date() // Current month
     });
 
     const [filterModal, setFilterModal] = useState({
@@ -48,40 +48,57 @@ export default function PesanTiket() {
     const [allStations, setAllStations] = useState([]);
     const [recentSearches, setRecentSearches] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [routeAvailability, setRouteAvailability] = useState({});
+    const [savedStations, setSavedStations] = useState({
+        keberangkatan: '',
+        tujuan: ''
+    });
 
-    // Data ketersediaan route kereta (simulasi)
-    const routeAvailability = {
-        '2025-10-01': true,
-        '2025-10-02': true,
-        '2025-10-03': false,
-        '2025-10-04': true,
-        '2025-10-05': true,
-        '2025-10-06': false,
-        '2025-10-07': true,
-        '2025-10-08': true,
-        '2025-10-09': true,
-        '2025-10-10': true,
-        '2025-10-11': false,
-        '2025-10-12': true,
-        '2025-10-13': false,
-        '2025-10-14': true,
-        '2025-10-15': true,
-        '2025-10-16': true,
-        '2025-10-17': true,
-        '2025-10-18': false,
-        '2025-10-19': true,
-        '2025-10-20': false,
-        '2025-10-21': true,
-        '2025-10-22': true,
-        '2025-10-23': true,
-        '2025-10-24': true,
-        '2025-10-25': true,
-        '2025-10-26': true,
-        '2025-10-27': false,
-        '2025-10-28': true,
-        '2025-10-29': true,
-        '2025-10-30': true,
-        '2025-10-31': true
+    // Function to save selected stations
+    const saveSelectedStations = (keberangkatan, tujuan) => {
+        setSavedStations({
+            keberangkatan: keberangkatan,
+            tujuan: tujuan
+        });
+    };
+
+    // Function to fetch route availability
+    const fetchRouteAvailability = async (departureStation = null, destinationStation = null) => {
+        const fromStation = departureStation || savedStations.keberangkatan || formData.keberangkatan;
+        const toStation = destinationStation || savedStations.tujuan || formData.tujuan;
+        
+        if (!fromStation || !toStation) return;
+        
+        try {
+            const startDate = new Date(2025, 9, 1); // October 1, 2025
+            const endDate = new Date(2025, 10, 30); // November 30, 2025
+            
+            const response = await axios.get(`${window.location.origin}/api/public/availability`, {
+                params: {
+                    stasiun_asal: fromStation,
+                    stasiun_tujuan: toStation,
+                    start_date: startDate.toISOString().split('T')[0],
+                    end_date: endDate.toISOString().split('T')[0],
+                    penumpang: formData.dewasa + formData.bayi
+                }
+            });
+            
+            if (response.data.success) {
+                setRouteAvailability(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching route availability:', error);
+            // Set default availability (all true) if API fails
+            const defaultAvailability = {};
+            const currentDate = new Date(2025, 9, 1);
+            const endDate = new Date(2025, 10, 30);
+            while (currentDate <= endDate) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                defaultAvailability[dateStr] = true;
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            setRouteAvailability(defaultAvailability);
+        }
     };
 
     // Data harga kereta per tanggal (simulasi dalam ribuan)
@@ -117,12 +134,24 @@ export default function PesanTiket() {
         fetchStations();
         fetchAllStations();
         loadRecentSearches();
+        
+        // Initialize saved stations from form data
+        if (formData.keberangkatan && formData.tujuan) {
+            saveSelectedStations(formData.keberangkatan, formData.tujuan);
+        }
     }, []);
+
+    // Fetch route availability when saved stations change
+    useEffect(() => {
+        if (savedStations.keberangkatan && savedStations.tujuan) {
+            fetchRouteAvailability();
+        }
+    }, [savedStations.keberangkatan, savedStations.tujuan, formData.dewasa, formData.bayi]);
 
     const fetchStations = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('/api/user/stations');
+            const response = await axios.get(`${window.location.origin}/api/user/stations`);
             if (response.data.success) {
                 setStations(response.data.data);
             }
@@ -137,7 +166,7 @@ export default function PesanTiket() {
 
     const fetchAllStations = async () => {
         try {
-            const response = await axios.get('/api/user/stations/all');
+            const response = await axios.get(`${window.location.origin}/api/user/stations/all`);
             if (response.data.success) {
                 setAllStations(response.data.data);
             }
@@ -191,10 +220,38 @@ export default function PesanTiket() {
             keberangkatan: prev.tujuan,
             tujuan: prev.keberangkatan
         }));
+        
+        // Also swap saved stations
+        setSavedStations(prev => ({
+            keberangkatan: prev.tujuan,
+            tujuan: prev.keberangkatan
+        }));
     };
 
     const handleCariJadwal = () => {
         console.log('Mencari jadwal dengan data:', formData);
+        console.log('Saved stations:', savedStations);
+        console.log('Selected date from calendar:', calendarModal.selectedDate);
+        
+        // Use saved stations if available, otherwise use form data
+        const searchData = {
+            keberangkatan: savedStations.keberangkatan || formData.keberangkatan,
+            tujuan: savedStations.tujuan || formData.tujuan,
+            tanggal: formData.tanggal || calendarModal.selectedDate.toISOString().split('T')[0],
+            dewasa: formData.dewasa,
+            bayi: formData.bayi,
+            pulangPergi: formData.pulangPergi,
+            tanggalPulang: formData.tanggalPulang
+        };
+        
+        console.log('Final search data:', searchData);
+        
+        // Navigate to schedule results page with search data
+        router.visit('/public/jadwal-kereta', {
+            method: 'get',
+            data: searchData,
+            preserveState: false
+        });
     };
 
     const openModal = (type) => {
@@ -216,8 +273,12 @@ export default function PesanTiket() {
     const handleStationSelect = (station) => {
         if (modalState.type === 'keberangkatan') {
             setFormData(prev => ({ ...prev, keberangkatan: station.name }));
+            // Save departure station
+            saveSelectedStations(station.name, savedStations.tujuan);
         } else if (modalState.type === 'tujuan') {
             setFormData(prev => ({ ...prev, tujuan: station.name }));
+            // Save destination station
+            saveSelectedStations(savedStations.keberangkatan, station.name);
         }
         
         // Simpan ke recent searches
@@ -254,6 +315,9 @@ export default function PesanTiket() {
 
     const handleDateSelect = (date) => {
         const formattedDate = date.toISOString().split('T')[0];
+        
+        console.log('Date selected:', date);
+        console.log('Formatted date:', formattedDate);
         
         if (calendarModal.type === 'pulang') {
             setCalendarModal(prev => ({
@@ -409,9 +473,11 @@ export default function PesanTiket() {
                                 <span className="text-sm font-medium text-gray-800 block mb-1">Keberangkatan</span>
                                 <button
                                     onClick={() => openModal('keberangkatan')}
-                                    className="w-full text-left text-gray-800 text-base bg-transparent border-none outline-none hover:text-gray-600 transition-colors font-medium"
+                                    className="w-full text-left text-base bg-transparent border-none outline-none transition-colors font-medium"
                                 >
-                                    {formData.keberangkatan || 'Pasar Senen'}
+                                    <span className={formData.keberangkatan ? 'text-gray-800' : 'text-gray-400'}>
+                                        {formData.keberangkatan || 'Pilih stasiun keberangkatan'}
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -439,9 +505,11 @@ export default function PesanTiket() {
                                 <span className="text-sm font-medium text-gray-800 block mb-1">Tujuan</span>
                                 <button
                                     onClick={() => openModal('tujuan')}
-                                    className="w-full text-left text-gray-800 text-base bg-transparent border-none outline-none hover:text-gray-600 transition-colors font-medium"
+                                    className="w-full text-left text-base bg-transparent border-none outline-none transition-colors font-medium"
                                 >
-                                    {formData.tujuan || 'Bandung'}
+                                    <span className={formData.tujuan ? 'text-gray-800' : 'text-gray-400'}>
+                                        {formData.tujuan || 'Pilih stasiun tujuan'}
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -457,10 +525,12 @@ export default function PesanTiket() {
                                 </div>
                                 <button
                                     onClick={() => openCalendarModal('berangkat')}
-                                    className="text-left hover:text-gray-600 transition-colors"
+                                    className="text-left transition-colors"
                                 >
                                     <span className="text-sm font-medium text-gray-800 block">Tanggal Berangkat</span>
-                                    <span className="text-sm text-gray-800 font-medium">{formatDate(calendarModal.selectedDate)}</span>
+                                    <span className={`text-sm font-medium ${formData.tanggal ? 'text-gray-800' : 'text-gray-400'}`}>
+                                        {formData.tanggal ? formatDate(calendarModal.selectedDate) : 'Pilih tanggal berangkat'}
+                                    </span>
                                 </button>
                             </div>
                             <div className="flex items-center">
@@ -489,10 +559,10 @@ export default function PesanTiket() {
                                 </div>
                                 <button
                                     onClick={() => openCalendarModal('pulang')}
-                                    className="text-left hover:text-gray-600 transition-colors flex-1"
+                                    className="text-left transition-colors flex-1"
                                 >
                                     <span className="text-sm font-medium text-gray-800 block">Tanggal Pulang</span>
-                                    <span className="text-sm text-gray-800 font-medium">
+                                    <span className={`text-sm font-medium ${formData.tanggalPulang ? 'text-gray-800' : 'text-gray-400'}`}>
                                         {formData.tanggalPulang ? formatDate(calendarModal.selectedReturnDate || new Date(formData.tanggalPulang)) : 'Pilih tanggal pulang'}
                                     </span>
                                 </button>
@@ -513,7 +583,7 @@ export default function PesanTiket() {
                             <div className="flex-1 text-left">
                                 <span className="text-sm font-medium text-gray-800 block mb-1">Pilih Penumpang</span>
                                 <span className="text-sm text-gray-800 font-medium">
-                                    {formData.dewasa.toString().padStart(2, '0')} Dewasa, {formData.bayi.toString().padStart(2, '0')} Bayi
+                                    {formData.dewasa} Dewasa{formData.bayi > 0 ? `, ${formData.bayi} Bayi` : ''}
                                 </span>
                             </div>
                             <div className="ml-2">
@@ -526,7 +596,12 @@ export default function PesanTiket() {
 
                     <button
                         onClick={handleCariJadwal}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg shadow-lg mt-6"
+                        disabled={!formData.keberangkatan || !formData.tujuan || !formData.tanggal}
+                        className={`w-full font-semibold py-4 px-6 rounded-2xl transition-all duration-300 text-lg shadow-lg mt-6 ${
+                            !formData.keberangkatan || !formData.tujuan || !formData.tanggal
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}
                     >
                         Cari Jadwal
                     </button>
@@ -582,6 +657,7 @@ export default function PesanTiket() {
                 routeAvailability={routeAvailability}
                 priceData={priceData}
                 selectedPrices={filterModal.selectedPrices}
+                savedStations={savedStations}
             />
 
             {/* Modal Filter */}
