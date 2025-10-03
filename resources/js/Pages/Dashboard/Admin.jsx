@@ -155,6 +155,30 @@ export default function AdminDashboard({ user }) {
     const [availableBandaraKeretas, setAvailableBandaraKeretas] = useState([]);
     const [availableBandaraStasiuns, setAvailableBandaraStasiuns] = useState([]);
 
+    // Porter states
+    const [showPorterModal, setShowPorterModal] = useState(false);
+    const [porterData, setPorterData] = useState({
+        name: '',
+        email: '',
+        status: 'OFFLINE',
+        keylogin: '',
+        no_telepon: '',
+        no_identitas: ''
+    });
+    const [porterProcessing, setPorterProcessing] = useState(false);
+    const [porters, setPorters] = useState([]);
+    const [loadingPorters, setLoadingPorters] = useState(false);
+    const [editingPorter, setEditingPorter] = useState(null);
+    
+    // Pagination states for porters
+    const [currentPorterPage, setCurrentPorterPage] = useState(1);
+    const [porterItemsPerPage] = useState(10);
+    const [totalPorterItems, setTotalPorterItems] = useState(0);
+    
+    // Search states for porters
+    const [porterSearchQuery, setPorterSearchQuery] = useState('');
+    const [isPorterSearching, setIsPorterSearching] = useState(false);
+
     // Dictionary synonyms untuk Natural Language Search (NLS)
     const citySynonyms = {
         // Yogyakarta variations
@@ -363,6 +387,42 @@ export default function AdminDashboard({ user }) {
     // Initialize Fuse instance for keretas
     const keretaFuse = useMemo(() => new Fuse(keretas, keretaFuseOptions), [keretas]);
 
+    // Fuse.js configuration for porter search with NLS
+    const porterFuseOptions = {
+        keys: [
+            {
+                name: 'name',
+                weight: 0.4,
+                getFn: (obj) => normalizeTextWithSynonyms(obj.name)
+            },
+            {
+                name: 'email',
+                weight: 0.3,
+                getFn: (obj) => normalizeTextWithSynonyms(obj.email)
+            },
+            {
+                name: 'no_telepon',
+                weight: 0.2,
+                getFn: (obj) => normalizeTextWithSynonyms(obj.no_telepon)
+            },
+            {
+                name: 'status',
+                weight: 0.1,
+                getFn: (obj) => normalizeTextWithSynonyms(obj.status)
+            }
+        ],
+        threshold: 0.4,
+        distance: 150,
+        includeScore: true,
+        minMatchCharLength: 2,
+        ignoreLocation: true,
+        findAllMatches: true,
+        useExtendedSearch: false
+    };
+
+    // Initialize Fuse instance for porters
+    const porterFuse = useMemo(() => new Fuse(porters, porterFuseOptions), [porters]);
+
     // Fuse.js configuration for tiket search with NLS
     const tiketFuseOptions = {
         keys: [
@@ -508,6 +568,242 @@ export default function AdminDashboard({ user }) {
     // Initialize Fuse instance for bandara tikets
     const bandaraFuse = useMemo(() => new Fuse(bandaraTikets, bandaraFuseOptions), [bandaraTikets]);
 
+    // Generate random key for porter login
+    const generatePorterKey = () => {
+        try {
+            const bytes = new Uint8Array(5);
+            if (window.crypto && window.crypto.getRandomValues) {
+                window.crypto.getRandomValues(bytes);
+            } else {
+                for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+            }
+            const key = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+            setPorterData(prev => ({ ...prev, keylogin: key }));
+            toast.info('🔑 Key login porter digenerate', {
+                position: 'top-right',
+                autoClose: 2000,
+            });
+        } catch (e) {
+            const key = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+            setPorterData(prev => ({ ...prev, keylogin: key }));
+        }
+    };
+
+    const handlePorterChange = (e) => {
+        const { name, value } = e.target;
+        setPorterData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+
+    const handlePorterSubmit = async (e) => {
+        e.preventDefault();
+        setPorterProcessing(true);
+        setErrors({});
+
+        try {
+            // Get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            const response = await fetch('/api/porters', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(porterData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Show success toast
+                toast.success('🧳 ' + data.message, {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+
+                // Reset form data but keep modal open
+                setPorterData({
+                    name: '',
+                    email: '',
+                    status: 'OFFLINE',
+                    keylogin: '',
+                    no_telepon: '',
+                    no_identitas: ''
+                });
+                setErrors({}); // Clear any previous errors
+                setEditingPorter(null);
+                fetchPorters();
+            } else {
+                if (data.errors) setErrors(data.errors);
+                toast.error('❌ ' + (data.message || 'Gagal membuat akun porter'), {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            toast.error('❌ Terjadi kesalahan saat membuat akun porter', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+        } finally {
+            setPorterProcessing(false);
+        }
+    };
+
+    // Handle edit porter
+    const handleEditPorter = (porter) => {
+        setEditingPorter(porter);
+        setPorterData({
+            name: porter.name,
+            email: porter.email,
+            status: porter.status,
+            keylogin: porter.keylogin,
+            no_telepon: porter.no_telepon,
+            no_identitas: porter.no_identitas
+        });
+        setShowPorterModal(true);
+        setErrors({});
+        toast.info('✏️ Mode edit porter', {
+            position: "top-right",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+        });
+    };
+
+    // Handle update porter
+    const handleUpdatePorter = async (e) => {
+        e.preventDefault();
+        setPorterProcessing(true);
+        setErrors({});
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            const response = await fetch(`/api/porters/${editingPorter.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(porterData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                toast.success('🧳 ' + data.message, {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+
+                setPorterData({
+                    name: '',
+                    email: '',
+                    status: 'OFFLINE',
+                    keylogin: '',
+                    no_telepon: '',
+                    no_identitas: ''
+                });
+                setEditingPorter(null);
+                setShowPorterModal(false);
+                setErrors({});
+                fetchPorters();
+            } else {
+                if (data.errors) setErrors(data.errors);
+                toast.error('❌ ' + (data.message || 'Gagal mengupdate porter'), {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            toast.error('❌ Terjadi kesalahan saat mengupdate porter', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+        } finally {
+            setPorterProcessing(false);
+        }
+    };
+
+    // Handle delete porter
+    const handleDeletePorter = async (porter) => {
+        if (!confirm(`Apakah Anda yakin ingin menghapus porter "${porter.name}"?`)) {
+            return;
+        }
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            const response = await fetch(`/api/porters/${porter.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                toast.success('🗑️ Data porter berhasil dihapus!', {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+                
+                // Refresh porters data and reset to first page if needed
+                if (porters.length === 1 && currentPorterPage > 1) {
+                    setCurrentPorterPage(currentPorterPage - 1);
+                }
+                fetchPorters();
+            } else {
+                toast.error('❌ ' + (data.message || 'Gagal menghapus porter'), {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            toast.error('❌ Terjadi kesalahan saat menghapus porter', {
+                position: 'top-right',
+                autoClose: 3000,
+            });
+        }
+    };
+
     // Filter stations based on search query with NLS
     const filteredStations = useMemo(() => {
         if (!searchQuery.trim()) {
@@ -587,6 +883,46 @@ export default function AdminDashboard({ user }) {
     
     // Update total kereta items for pagination info
     const displayTotalKeretaItems = filteredKeretas.length;
+
+    // Filter porters based on search query with NLS
+    const filteredPorters = useMemo(() => {
+        if (!porterSearchQuery.trim()) {
+            setIsPorterSearching(false);
+            return porters;
+        }
+        
+        setIsPorterSearching(true);
+        
+        // Normalisasi search query dengan synonyms
+        const normalizedQuery = normalizeTextWithSynonyms(porterSearchQuery.trim());
+        
+        // Search dengan query yang sudah dinormalisasi
+        const results = porterFuse.search(normalizedQuery);
+        
+        // Juga coba search dengan query original untuk fallback
+        const originalResults = porterFuse.search(porterSearchQuery.trim());
+        
+        // Gabungkan hasil dan remove duplicates
+        const combinedResults = [...results, ...originalResults];
+        const uniqueResults = combinedResults.filter((result, index, self) => 
+            index === self.findIndex(r => r.item.id === result.item.id)
+        );
+        
+        // Sort berdasarkan score (semakin kecil semakin baik)
+        uniqueResults.sort((a, b) => a.score - b.score);
+        
+        return uniqueResults.map(result => result.item);
+    }, [porterSearchQuery, porterFuse, porters]);
+
+    // Calculate pagination for porters based on filtered data
+    const totalPorterPages = Math.ceil(filteredPorters.length / porterItemsPerPage);
+    const startPorterIndex = (currentPorterPage - 1) * porterItemsPerPage;
+    
+    // Get paginated data from filtered porters results
+    const paginatedPorters = filteredPorters.slice(startPorterIndex, startPorterIndex + porterItemsPerPage);
+    
+    // Update total porter items for pagination info
+    const displayTotalPorterItems = filteredPorters.length;
 
     // Filter tikets based on search query with NLS
     const filteredTikets = useMemo(() => {
@@ -775,6 +1111,36 @@ export default function AdminDashboard({ user }) {
             toast.error('❌ Terjadi kesalahan saat memuat data!');
         } finally {
             setLoadingStations(false);
+        }
+    };
+
+    // Fetch porters data
+    const fetchPorters = async () => {
+        setLoadingPorters(true);
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const response = await fetch('/api/porters', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                }
+            });
+
+            const data = await response.json();
+            if (response.ok && data.success) {
+                // Sort by id DESC (newest first)
+                const sortedPorters = data.data.sort((a, b) => b.id - a.id);
+                setPorters(sortedPorters);
+                setTotalPorterItems(sortedPorters.length);
+            } else {
+                toast.error('❌ Gagal memuat data porter!');
+            }
+        } catch (error) {
+            console.error('Error fetching porters:', error);
+            toast.error('❌ Terjadi kesalahan saat memuat data porter!');
+        } finally {
+            setLoadingPorters(false);
         }
     };
 
@@ -1096,14 +1462,15 @@ export default function AdminDashboard({ user }) {
         }
     };
 
-    // Load stations, keretas, tikets, commiters, LRT tikets, bandara tikets, and dropdown data on component mount
+    // Load stations, keretas, tikets, commiters, LRT tikets, bandara tikets, porters, and dropdown data on component mount
     useEffect(() => {
         fetchStations();
         fetchKeretas();
- fetchTikets();
+        fetchTikets();
         fetchCommiters();
         fetchLrtTikets();
         fetchBandaraTikets();
+        fetchPorters();
         fetchDropdownKeretas();
         fetchDropdownStasiuns();
         fetchDropdownCommuterKeretas();
@@ -1143,6 +1510,11 @@ export default function AdminDashboard({ user }) {
     useEffect(() => {
         setCurrentBandaraPage(1);
     }, [bandaraSearchQuery]);
+
+    // Reset porter pagination when porter search query changes
+    useEffect(() => {
+        setCurrentPorterPage(1);
+    }, [porterSearchQuery]);
 
     const handleLogout = () => {
         if (confirm('Apakah Anda yakin ingin keluar?')) {
@@ -1706,6 +2078,34 @@ export default function AdminDashboard({ user }) {
     const goToNextKeretaPage = () => {
         if (currentKeretaPage < totalKeretaPages) {
             setCurrentKeretaPage(currentKeretaPage + 1);
+        }
+    };
+
+    // Porter search functions
+    const handlePorterSearchChange = (e) => {
+        setPorterSearchQuery(e.target.value);
+    };
+
+    const clearPorterSearch = () => {
+        setPorterSearchQuery('');
+    };
+
+    // Porter pagination functions
+    const goToPorterPage = (page) => {
+        if (page >= 1 && page <= totalPorterPages) {
+            setCurrentPorterPage(page);
+        }
+    };
+
+    const goToPreviousPorterPage = () => {
+        if (currentPorterPage > 1) {
+            setCurrentPorterPage(currentPorterPage - 1);
+        }
+    };
+
+    const goToNextPorterPage = () => {
+        if (currentPorterPage < totalPorterPages) {
+            setCurrentPorterPage(currentPorterPage + 1);
         }
     };
 
@@ -3099,6 +3499,29 @@ export default function AdminDashboard({ user }) {
                             <span className="mr-3">✈️</span>
                             Tiket Bandara
                         </button>
+                        <button
+                            onClick={() => {
+                                setShowPorterModal(true);
+                                setPorterData({
+                                    name: '',
+                                    email: '',
+                                    status: 'OFFLINE',
+                                    keylogin: '',
+                                    no_telepon: '',
+                                    no_identitas: ''
+                                });
+                                setErrors({});
+                                toast.info('🧳 Form tambah akun porter dibuka', {
+                                    position: 'top-right',
+                                    autoClose: 2000,
+                                    theme: 'light',
+                                });
+                            }}
+                            className="flex items-center px-3 py-2 text-sm font-medium text-amber-700 rounded-md hover:bg-amber-50 w-full text-left"
+                        >
+                            <span className="mr-3">🧳</span>
+                            Akun Porter
+                        </button>
                     </nav>
                 </div>
 
@@ -3124,7 +3547,7 @@ export default function AdminDashboard({ user }) {
                 <main className="flex-1 overflow-y-auto p-6">
                     {/* KAI Dashboard Overview */}
                     <div className="mb-8">
-                        <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard KAI</h1>
                                 <p className="text-gray-600">Kelola data stasiun, kereta, tiket antar kota, dan commuter</p>
@@ -3480,6 +3903,346 @@ export default function AdminDashboard({ user }) {
                             </button>
                         </div>
                     </div>
+
+            {/* Porter Modal */}
+            {showPorterModal && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-10 mx-auto p-6 border w-full max-w-6xl shadow-lg rounded-md bg-white m-4">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                {editingPorter ? 'Edit Data Porter' : 'Tambah Akun Porter'}
+                            </h3>
+                            <button
+                                onClick={() => {
+                                    setShowPorterModal(false);
+                                    setPorterData({
+                                        name: '',
+                                        email: '',
+                                        status: 'OFFLINE',
+                                        keylogin: '',
+                                        no_telepon: '',
+                                        no_identitas: ''
+                                    });
+                                    setEditingPorter(null);
+                                    setErrors({});
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <form onSubmit={editingPorter ? handleUpdatePorter : handlePorterSubmit} className="space-y-4">
+                            {/* Nama */}
+                            <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Nama <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    value={porterData.name}
+                                    onChange={handlePorterChange}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Contoh: Budi Setiawan"
+                                />
+                                {errors.name && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                                )}
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Email <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    value={porterData.email}
+                                    onChange={handlePorterChange}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="nama@contoh.com"
+                                />
+                                {errors.email && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                                )}
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Status <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    id="status"
+                                    name="status"
+                                    value={porterData.status}
+                                    onChange={handlePorterChange}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${errors.status ? 'border-red-500' : 'border-gray-300'}`}
+                                >
+                                    <option value="ONLINE">ONLINE</option>
+                                    <option value="OFFLINE">OFFLINE</option>
+                                </select>
+                                {errors.status && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.status}</p>
+                                )}
+                            </div>
+
+                            {/* Key Login */}
+                            <div>
+                                <label htmlFor="keylogin" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Key Login <span className="text-red-500">*</span>
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        id="keylogin"
+                                        name="keylogin"
+                                        value={porterData.keylogin}
+                                        onChange={handlePorterChange}
+                                        className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${errors.keylogin ? 'border-red-500' : 'border-gray-300'}`}
+                                        placeholder="Klik Generate untuk membuat key"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={generatePorterKey}
+                                        className="px-4 py-2 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                    >
+                                        Generate Key
+                                    </button>
+                                </div>
+                                {errors.keylogin && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.keylogin}</p>
+                                )}
+                            </div>
+
+                            {/* No Telepon */}
+                            <div>
+                                <label htmlFor="no_telepon" className="block text-sm font-medium text-gray-700 mb-1">
+                                    No Telepon
+                                </label>
+                                <input
+                                    type="text"
+                                    id="no_telepon"
+                                    name="no_telepon"
+                                    value={porterData.no_telepon}
+                                    onChange={handlePorterChange}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${errors.no_telepon ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Contoh: 081234567890"
+                                />
+                                {errors.no_telepon && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.no_telepon}</p>
+                                )}
+                            </div>
+
+                            {/* No Identitas */}
+                            <div>
+                                <label htmlFor="no_identitas" className="block text-sm font-medium text-gray-700 mb-1">
+                                    No Identitas
+                                </label>
+                                <input
+                                    type="text"
+                                    id="no_identitas"
+                                    name="no_identitas"
+                                    value={porterData.no_identitas}
+                                    onChange={handlePorterChange}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${errors.no_identitas ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Contoh: KTP/SIM/ID lainnya"
+                                />
+                                {errors.no_identitas && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.no_identitas}</p>
+                                )}
+                            </div>
+
+                            {/* Form Actions */}
+                            <div className="flex items-center justify-end space-x-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowPorterModal(false);
+                                        setPorterData({
+                                            name: '',
+                                            email: '',
+                                            status: 'OFFLINE',
+                                            keylogin: '',
+                                            no_telepon: '',
+                                            no_identitas: ''
+                                        });
+                                        setEditingPorter(null);
+                                        setErrors({});
+                                    }}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={porterProcessing}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {porterProcessing ? 'Menyimpan...' : 'Simpan'}
+                                </button>
+                            </div>
+                        </form>
+
+                        {/* Divider */}
+                        <div className="my-8 border-t border-gray-200"></div>
+
+                        {/* Porter Table Section */}
+                        <div className="mt-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-lg font-semibold text-gray-900">Data Porter</h4>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-500">
+                                        {isPorterSearching ? (
+                                            <>Ditemukan: {displayTotalPorterItems} dari {totalPorterItems} porter | Halaman {currentPorterPage} dari {totalPorterPages}</>
+                                        ) : (
+                                            <>Total: {displayTotalPorterItems} porter | Halaman {currentPorterPage} dari {totalPorterPages}</>
+                                        )}
+                                    </span>
+                                    {loadingPorters && (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Search Input */}
+                            <div className="mb-4">
+                                <div className="relative max-w-md">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Cari porter..."
+                                        value={porterSearchQuery}
+                                        onChange={handlePorterSearchChange}
+                                        className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                                    />
+                                    {porterSearchQuery && (
+                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                            <button
+                                                onClick={clearPorterSearch}
+                                                className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                                                title="Hapus pencarian"
+                                            >
+                                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Porter Table */}
+                            <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    No
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Nama
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Email
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Status
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    No. Telepon
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Key Login
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Aksi
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {loadingPorters ? (
+                                                <tr>
+                                                    <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                                                        <div className="flex items-center justify-center">
+                                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600"></div>
+                                                            <span className="ml-2">Memuat data porter...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : paginatedPorters.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                                                        {isPorterSearching ? 'Tidak ada porter yang sesuai dengan pencarian' : 'Belum ada data porter'}
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                paginatedPorters.map((porter, index) => (
+                                                    <tr key={porter.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            {startPorterIndex + index + 1}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {porter.name}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {porter.email}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                porter.status === 'ONLINE' 
+                                                                    ? 'bg-green-100 text-green-800' 
+                                                                    : 'bg-red-100 text-red-800'
+                                                            }`}>
+                                                                {porter.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {porter.no_telepon}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {porter.keylogin}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                            <div className="flex space-x-2">
+                                                                <button
+                                                                    onClick={() => handleEditPorter(porter)}
+                                                                    className="text-amber-600 hover:text-amber-900"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeletePorter(porter)}
+                                                                    className="text-red-600 hover:text-red-900"
+                                                                >
+                                                                    Hapus
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
                 </main>
             </div>

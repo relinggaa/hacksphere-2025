@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StasiunController;
 use App\Http\Controllers\KeretaController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\TiketAntarKotaController;
 use App\Http\Controllers\TiketCommuterController;
 use App\Http\Controllers\TiketLrtController;
 use App\Http\Controllers\TiketBandaraController;
+use App\Http\Controllers\PorterController;
 use Inertia\Inertia;
 
 // Route sederhana untuk testing
@@ -118,6 +120,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/tiket-bandara/{id}', [TiketBandaraController::class, 'show'])->name('tiket-bandara.show');
         Route::put('/api/tiket-bandara/{id}', [TiketBandaraController::class, 'update'])->name('tiket-bandara.update');
         Route::delete('/api/tiket-bandara/{id}', [TiketBandaraController::class, 'destroy'])->name('tiket-bandara.destroy');
+
+        // Porter management routes - only accessible by admin
+        Route::get('/api/porters', [PorterController::class, 'index'])->name('porters.index');
+        Route::post('/api/porters', [PorterController::class, 'store'])->name('porters.store');
+        
+        // Test route for debugging CSRF
+        Route::post('/api/test-csrf', function(Request $request) {
+            return response()->json([
+                'success' => true,
+                'message' => 'CSRF test successful',
+                'csrf_token' => $request->header('X-CSRF-TOKEN'),
+                'user_authenticated' => auth()->check(),
+                'user_role' => auth()->user()?->role ?? 'not authenticated'
+            ]);
+        })->name('test.csrf');
         
         // Additional routes for dropdown data
         Route::get('/api/dropdown/keretas', [TiketAntarKotaController::class, 'getKeretas'])->name('dropdown.keretas');
