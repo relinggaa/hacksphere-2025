@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import axios from 'axios';
 
-export default function JadwalKereta({ searchData = {} }) {
-    const [schedules, setSchedules] = useState([]);
-    const [loading, setLoading] = useState(true);
+export default function JadwalKereta({ searchData = {}, schedules = [], hasResults = false, totalResults = 0, error = null }) {
     const [selectedDate, setSelectedDate] = useState(searchData.tanggal || '');
+    const [showExpired, setShowExpired] = useState(false);
     
-    // Debug: Log the search data and selected date
-    console.log('JadwalKereta - searchData:', searchData);
-    console.log('JadwalKereta - selectedDate:', selectedDate);
+    // Debug: Log the received props
+    console.log('JadwalKereta - props:', { searchData, schedules, hasResults, totalResults, error });
     
     // Set initial selectedDate when component mounts
     useEffect(() => {
@@ -17,7 +14,6 @@ export default function JadwalKereta({ searchData = {} }) {
             setSelectedDate(searchData.tanggal);
         }
     }, [searchData.tanggal]);
-    const [showExpired, setShowExpired] = useState(false);
 
     // Generate date options (selected date + 7 days)
     const generateDateOptions = () => {
@@ -76,77 +72,7 @@ export default function JadwalKereta({ searchData = {} }) {
         return arrival.toTimeString().slice(0, 5);
     };
 
-    // Fetch schedules based on search criteria
-    useEffect(() => {
-        if (selectedDate && searchData.keberangkatan && searchData.tujuan) {
-            fetchSchedules();
-        }
-    }, [selectedDate, searchData.keberangkatan, searchData.tujuan, searchData.dewasa, searchData.bayi]);
-
-    const fetchSchedules = async () => {
-        try {
-            setLoading(true);
-            
-            // Debug: Log the search data
-            console.log('Search data:', searchData);
-            console.log('Selected date:', selectedDate);
-            
-            const params = {
-                stasiun_asal: searchData?.keberangkatan || 'Pasar Senen',
-                stasiun_tujuan: searchData?.tujuan || 'Bandung',
-                tanggal: selectedDate || searchData?.tanggal,
-                penumpang: (searchData?.dewasa || 1) + (searchData?.bayi || 0)
-            };
-            
-            console.log('API params:', params);
-            
-            // Use absolute URL to avoid URL construction issues
-            const apiUrl = '/api/public/schedules';
-            console.log('Making request to:', apiUrl);
-            
-            // Create axios instance with explicit configuration for simulator safety
-            let axiosInstance = axios;
-            try {
-                // Test if baseURL is valid
-                new URL(axios.defaults.baseURL);
-            } catch (e) {
-                console.log('Invalid baseURL detected, creating new instance');
-                axiosInstance = axios.create({
-                    baseURL: 'http://localhost:8000',
-                    timeout: 10000,
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-            }
-            
-            const response = await axiosInstance.get(apiUrl, { params });
-            
-            console.log('API response:', response.data);
-            
-            if (response.data && response.data.success) {
-                setSchedules(response.data.data || []);
-                console.log('Schedules found:', response.data.data ? response.data.data.length : 0);
-            } else {
-                console.log('No schedules found or API error:', response.data);
-                setSchedules([]);
-            }
-        } catch (error) {
-            console.error('Error fetching schedules:', error);
-            if (error.response) {
-                console.error('Response error:', error.response.data);
-            } else if (error.request) {
-                console.error('Request error:', error.request);
-            } else {
-                console.error('Error:', error.message);
-            }
-            setSchedules([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Data comes from controller props, no need to fetch
 
     const handleBack = () => {
         router.visit('/public/pesan-tiket');
@@ -156,6 +82,16 @@ export default function JadwalKereta({ searchData = {} }) {
         const formattedDate = date.toISOString().split('T')[0];
         console.log('Date changed to:', formattedDate);
         setSelectedDate(formattedDate);
+        
+        // Navigate to the same route with new date parameter
+        router.visit('/public/jadwal-kereta', {
+            method: 'get',
+            data: {
+                ...searchData,
+                tanggal: formattedDate
+            },
+            preserveState: false
+        });
     };
 
     const handleSort = () => {
@@ -236,11 +172,17 @@ export default function JadwalKereta({ searchData = {} }) {
             <div className="px-4 py-4">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Kereta Keberangkatan</h2>
                 
-                {loading ? (
-                    <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                {error ? (
+                    <div className="text-center py-8">
+                        <div className="text-red-500 mb-4">{error}</div>
+                        <button 
+                            onClick={() => router.visit('/public/pesan-tiket')}
+                            className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+                        >
+                            Ulangi Pencarian
+                        </button>
                     </div>
-                ) : schedules.length === 0 ? (
+                ) : !hasResults || schedules.length === 0 ? (
                     <div className="text-center py-8">
                         <div className="text-gray-500 mb-4">Tidak ada jadwal tersedia untuk tanggal ini</div>
                         <button 

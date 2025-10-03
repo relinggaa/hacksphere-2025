@@ -263,6 +263,27 @@ class TiketAntarKotaSeeder extends Seeder
                 'stasiun_asal' => 'Pasar Senen',
                 'stasiun_tujuan' => 'Bandung'
             ],
+            // Rute terbalik untuk Bandung → Pasar Senen
+            [
+                'nama_kereta' => 'ARGO PARAHYANGAN (104)',
+                'kelas' => 'Eksekutif',
+                'harga_termurah' => 550000.00,
+                'jam' => '09:00',
+                'tanggal' => '2025-10-14',
+                'penumpang' => 1,
+                'stasiun_asal' => 'Bandung',
+                'stasiun_tujuan' => 'Pasar Senen'
+            ],
+            [
+                'nama_kereta' => 'CIPER (142)',
+                'kelas' => 'Bisnis',
+                'harga_termurah' => 420000.00,
+                'jam' => '15:30',
+                'tanggal' => '2025-10-14',
+                'penumpang' => 1,
+                'stasiun_asal' => 'Bandung',
+                'stasiun_tujuan' => 'Pasar Senen'
+            ],
             [
                 'nama_kereta' => 'ARGO PARAHYANGAN (104)',
                 'kelas' => 'Eksekutif',

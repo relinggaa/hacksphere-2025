@@ -205,7 +205,7 @@ export default function PesanTiket() {
     );
 
     const handleBack = () => {
-        router.get('/user/dashboard');
+        router.visit('/public/dashboard');
     };
 
     const handleInputChange = (field, value) => {

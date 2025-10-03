@@ -41,7 +41,7 @@ class AvailabilityController extends Controller
                     ->where('tanggal', $dateStr)
                     ->where('penumpang', '>=', $penumpang)
                     ->count();
-
+                
                 $availability[$dateStr] = $ticketCount > 0;
 
                 $currentDate->add(new \DateInterval('P1D'));

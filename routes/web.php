@@ -141,11 +141,17 @@ Route::get('/public/pesan-tiket', function () {
     return Inertia::render('User/PesanTiket');
 })->name('public.pesan-tiket');
 
-Route::get('/public/jadwal-kereta', function () {
-    return Inertia::render('User/JadwalKereta', [
-        'searchData' => request()->all()
+Route::get('/public/jadwal-kereta', [App\Http\Controllers\User\JadwalKeretaController::class, 'index'])->name('public.jadwal-kereta');
+
+Route::get('/public/profile', function () {
+    return Inertia::render('User/Profile', [
+        'auth' => auth()->user()
     ]);
-})->name('public.jadwal-kereta');
+})->name('public.profile');
+
+// Public API routes untuk jadwal kereta
+Route::get('/api/public/schedules', [App\Http\Controllers\Api\User\ScheduleController::class, 'getSchedules'])->name('api.public.schedules');
+Route::get('/api/public/availability', [App\Http\Controllers\Api\User\AvailabilityController::class, 'checkAvailability'])->name('api.public.availability');
 
 // Root route - redirect to appropriate dashboard or login
 Route::get('/', function () {

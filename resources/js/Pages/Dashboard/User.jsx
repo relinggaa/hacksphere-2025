@@ -227,34 +227,43 @@ export default function UserDashboard({ user }) {
 
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
                 <div className="flex justify-around">
-                    <div className="text-center">
+                    <button 
+                        onClick={() => router.visit('/public/dashboard')}
+                        className="text-center"
+                    >
                         <div className="w-6 h-6 bg-blue-600 rounded-full mx-auto mb-1"></div>
                         <span className="text-xs text-blue-600 font-medium">Beranda</span>
-                    </div>
-                    <div className="text-center">
+                    </button>
+                    <button 
+                        onClick={() => router.visit('/public/pesan-tiket')}
+                        className="text-center hover:text-blue-600 transition-colors"
+                    >
                         <svg className="w-6 h-6 text-gray-400 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="text-xs text-gray-400">Kereta</span>
-                    </div>
-                    <div className="text-center">
+                    </button>
+                    <button className="text-center hover:text-blue-600 transition-colors">
                         <svg className="w-6 h-6 text-gray-400 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
                         </svg>
                         <span className="text-xs text-gray-400">Tiket Saya</span>
-                    </div>
-                    <div className="text-center">
+                    </button>
+                    <button className="text-center hover:text-blue-600 transition-colors">
                         <svg className="w-6 h-6 text-gray-400 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
                         </svg>
                         <span className="text-xs text-gray-400">Promo</span>
-                    </div>
-                    <div className="text-center">
+                    </button>
+                    <button 
+                        onClick={() => router.visit('/public/profile')}
+                        className="text-center hover:text-blue-600 transition-colors"
+                    >
                         <svg className="w-6 h-6 text-gray-400 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-xs text-gray-400">Akun</span>
-                    </div>
+                        <span className="text-xs text-gray-400">Profil</span>
+                    </button>
                 </div>
             </div>
 
