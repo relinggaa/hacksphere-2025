@@ -182,25 +182,28 @@ export default function ChatbotModal({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
-            <div className="bg-white rounded-t-3xl w-full max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 chatbot-modal-overlay flex items-end justify-center z-50 mb-16">
+            <div className="chatbot-modal-container rounded-t-3xl w-full max-h-[85vh] flex flex-col">
                 {/* Header */}
-                <div className="p-4 border-b border-gray-200 bg-blue-600 text-white rounded-t-3xl">
+                <div className="chatbot-header p-4 text-white rounded-t-3xl">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 backdrop-blur-sm">
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
                                 </svg>
                             </div>
                             <div>
                                 <h2 className="text-lg font-semibold">KAI Access Assistant</h2>
-                                <p className="text-blue-100 text-sm">Online • Siap membantu</p>
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                    <p className="text-purple-100 text-sm">Online • Siap membantu</p>
+                                </div>
                             </div>
                         </div>
                         <button 
                             onClick={onClose}
-                            className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-full transition-colors"
+                            className="w-8 h-8 flex items-center justify-center hover:bg-white/20 rounded-full transition-colors backdrop-blur-sm"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -210,7 +213,7 @@ export default function ChatbotModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="chatbot-messages flex-1 overflow-y-auto p-4 space-y-4">
                     {messages.map((message) => (
                         <div
                             key={message.id}
@@ -219,14 +222,14 @@ export default function ChatbotModal({ isOpen, onClose }) {
                             <div
                                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                                     message.sender === 'user'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 text-gray-800'
+                                        ? 'user-message text-white'
+                                        : 'bot-message text-gray-800'
                                 }`}
                             >
-                                <div className="whitespace-pre-line text-sm">
+                                <div className="whitespace-pre-line text-sm leading-relaxed">
                                     {message.text}
                                 </div>
-                                <div className={`text-xs mt-1 ${
+                                <div className={`text-xs mt-2 ${
                                     message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
                                 }`}>
                                     {formatTime(message.timestamp)}
@@ -237,11 +240,11 @@ export default function ChatbotModal({ isOpen, onClose }) {
                     
                     {isTyping && (
                         <div className="flex justify-start">
-                            <div className="bg-gray-100 text-gray-800 rounded-2xl px-4 py-3">
+                            <div className="typing-indicator rounded-2xl px-4 py-3">
                                 <div className="flex items-center space-x-1">
-                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                    <div className="typing-dot w-2 h-2 rounded-full"></div>
+                                    <div className="typing-dot w-2 h-2 rounded-full"></div>
+                                    <div className="typing-dot w-2 h-2 rounded-full"></div>
                                 </div>
                             </div>
                         </div>
@@ -250,7 +253,7 @@ export default function ChatbotModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Input */}
-                <div className="p-4 border-t border-gray-200">
+                <div className="chatbot-input-area p-4">
                     <div className="flex items-center space-x-3">
                         <div className="flex-1 relative">
                             <textarea
@@ -258,7 +261,7 @@ export default function ChatbotModal({ isOpen, onClose }) {
                                 onChange={(e) => setInputMessage(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="Tulis pesan Anda..."
-                                className="w-full px-4 py-3 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="chatbot-input w-full px-4 py-3 rounded-2xl resize-none focus:outline-none placeholder-gray-500 text-gray-800"
                                 rows="1"
                                 style={{ minHeight: '48px', maxHeight: '120px' }}
                             />
@@ -266,7 +269,7 @@ export default function ChatbotModal({ isOpen, onClose }) {
                         <button
                             onClick={handleSendMessage}
                             disabled={!inputMessage.trim()}
-                            className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                            className="chatbot-send-button w-12 h-12 text-white rounded-full flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

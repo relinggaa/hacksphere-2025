@@ -36,33 +36,126 @@ export default function UserDashboard({ user }) {
         <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800">
             <div className="purple-curved-down px-4 pt-12 pb-6 z-10 relative">
                 <div className="flex items-center justify-between mb-6">
+                    {/* User Greeting Section */}
+                    <div className="flex items-center space-x-3">
+
                     <div>
-                        <p className="text-white/80 text-sm">Selamat Malam</p>
-                        <p className="text-white text-lg font-semibold">{user.name.toUpperCase()}</p>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                            </svg>
+                            <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-white/90 text-sm font-medium">Selamat Malam</span>
+                                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                            </div>
+                            <h1 className="text-white text-lg font-bold tracking-tight">{user.name}</h1>
+                            <p className="text-white/70 text-xs">Selamat datang kembali!</p>
                         </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center space-x-2 relative z-50 header-action-buttons">
+                        {/* Notifications Button */}
                         <button 
-                            onClick={() => router.visit('/public/cart')}
-                            className="relative w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('🔔 Notifications button clicked');
+                                alert('🔔 Fitur notifikasi akan segera tersedia!');
+                            }}
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                console.log('🔔 Notifications button mouse down');
+                            }}
+                            onMouseUp={(e) => {
+                                e.preventDefault();
+                                console.log('🔔 Notifications button mouse up');
+                            }}
+                            className="group relative w-9 h-9 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-white/20 transition-all duration-300 border border-white/20 hover:border-white/30 cursor-pointer z-50"
+                            style={{ 
+                                pointerEvents: 'auto',
+                                position: 'relative',
+                                zIndex: 50
+                            }}
+                            aria-label="Notifikasi"
+                        >
+                            <svg className="w-4 h-4 text-white group-hover:scale-110 transition-transform pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.828 7l2.586 2.586a2 2 0 002.828 0L12.828 7H4.828zM4 12h16M4 16h16" />
+                            </svg>
+                            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white pointer-events-none"></div>
+                        </button>
+
+                        {/* Cart Button */}
+                        <button 
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('🛒 Cart button clicked - navigating to cart');
+                                try {
+                                    router.visit('/public/cart', {
+                                        method: 'get',
+                                        preserveState: false,
+                                        preserveScroll: false
+                                    });
+                                } catch (error) {
+                                    console.error('Navigation error:', error);
+                                    window.location.href = '/public/cart';
+                                }
+                            }}
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                console.log('🛒 Cart button mouse down');
+                            }}
+                            onMouseUp={(e) => {
+                                e.preventDefault();
+                                console.log('🛒 Cart button mouse up');
+                            }}
+                            className="group relative w-9 h-9 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-white/20 transition-all duration-300 border border-white/20 hover:border-white/30 cursor-pointer z-50"
+                            style={{ 
+                                pointerEvents: 'auto',
+                                position: 'relative',
+                                zIndex: 50
+                            }}
                             aria-label="Keranjang"
                         >
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-white group-hover:scale-110 transition-transform pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M7 22a1 1 0 100-2 1 1 0 000 2zm12 0a1 1 0 100-2 1 1 0 000 2z" />
                             </svg>
                             {cartCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1 rounded">{cartCount}</span>
+                                <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white shadow-lg animate-bounce pointer-events-none">
+                                    {cartCount}
+                                </span>
                             )}
                         </button>
+
+                        {/* Help Button */}
                         <button 
-                            onClick={handleOpenChatbot}
-                            className="bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition-colors"
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('❓ Help button clicked');
+                                handleOpenChatbot();
+                            }}
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                console.log('❓ Help button mouse down');
+                            }}
+                            onMouseUp={(e) => {
+                                e.preventDefault();
+                                console.log('❓ Help button mouse up');
+                            }}
+                            className="group bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm px-3 py-1.5 rounded-xl hover:from-white/30 hover:to-white/20 transition-all duration-300 border border-white/20 hover:border-white/30 flex items-center space-x-1.5 cursor-pointer z-50"
+                            style={{ 
+                                pointerEvents: 'auto',
+                                position: 'relative',
+                                zIndex: 50
+                            }}
                         >
-                            <span className="text-white text-sm">🤖 Bantuan</span>
+                            <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-purple-500 rounded-md flex items-center justify-center pointer-events-none">
+                                <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <span className="text-white text-xs font-medium group-hover:scale-105 transition-transform pointer-events-none">Assistant</span>
                         </button>
                     </div>
                 </div>
@@ -130,14 +223,14 @@ export default function UserDashboard({ user }) {
                                 <div>
                                     <h3 className="font-bold text-gray-800 text-xl">RailPoin</h3>
                                     <p className="text-sm text-gray-500">Loyalty points Anda</p>
-                                </div>
-                            </div>
+                    </div>
+                        </div>
                             <div className="flex items-center bg-purple-50 px-5 py-3 rounded-full">
                                 <span className="w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm mr-3">★</span>
                                 <span className="text-purple-600 font-semibold text-base">Basic</span>
                                 <svg className="w-5 h-5 text-purple-400 ml-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                </svg>
+                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                            </svg>
                             </div>
                         </div>
                     </div>
@@ -262,11 +355,11 @@ export default function UserDashboard({ user }) {
                 </div>
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+            <div className="footer-navigation px-4 py-2">
                 <div className="flex justify-around">
                     <button 
                         onClick={() => router.visit('/public/dashboard')}
-                        className="text-center"
+                        className="text-center hover:text-blue-600 transition-colors"
                     >
                         <div className="w-6 h-6 bg-blue-600 rounded-full mx-auto mb-1"></div>
                         <span className="text-xs text-blue-600 font-medium">Beranda</span>
