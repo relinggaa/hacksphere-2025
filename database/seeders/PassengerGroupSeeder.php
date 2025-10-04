@@ -10,12 +10,8 @@ use App\Models\Passenger;
 
 class PassengerGroupSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Get the first user or create one
         $user = User::first();
         
         if (!$user) {
@@ -27,7 +23,6 @@ class PassengerGroupSeeder extends Seeder
             ]);
         }
 
-        // Create sample passenger groups with multiple passengers
         $groupsData = [
             [
                 'group_name' => 'Keluarga',
@@ -53,13 +48,11 @@ class PassengerGroupSeeder extends Seeder
         ];
 
         foreach ($groupsData as $groupData) {
-            // Create the group
             $group = PassengerGroup::create([
                 'user_id' => $user->id,
                 'group_name' => $groupData['group_name']
             ]);
 
-            // Create passengers for the group
             foreach ($groupData['passengers'] as $passengerData) {
                 Passenger::create([
                     'passenger_group_id' => $group->id,

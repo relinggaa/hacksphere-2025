@@ -45,7 +45,7 @@ export default function OCRResultModal({ isOpen, onClose, ocrData, onConfirm }) 
                             <div className={`text-sm font-medium bg-white px-3 py-2 rounded border ${
                                 ocrData.nik ? 'text-gray-900' : 'text-red-500'
                             }`}>
-                                {ocrData.nik || 'Tidak ditemukan'}
+                                {ocrData.nik  || 'Tidak ditemukan'}
                             </div>
                         </div>
 

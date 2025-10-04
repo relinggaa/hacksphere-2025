@@ -16,7 +16,6 @@ export default function GroupManagementModal({ isOpen, onClose }) {
         }
     }, [isOpen]);
 
-    // Helper: fetch JSON with CSRF
     const fetchJson = async (url, options = {}) => {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const res = await fetch(url, {
@@ -39,7 +38,6 @@ export default function GroupManagementModal({ isOpen, onClose }) {
         return data;
     };
 
-    // Load groups from API
     const loadGroups = async () => {
         try {
             const data = await fetchJson('/api/passenger-groups', { method: 'GET' });
@@ -187,6 +185,7 @@ export default function GroupManagementModal({ isOpen, onClose }) {
                         nik: p.nik.trim()
                     }))
                 })
+                
             });
 
             if (data.success) {

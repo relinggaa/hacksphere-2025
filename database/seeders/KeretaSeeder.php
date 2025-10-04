@@ -7,12 +7,8 @@ use App\Models\Kereta;
 
 class KeretaSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Clear existing data
         Kereta::truncate();
 
         $keretas = [

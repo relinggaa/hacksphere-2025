@@ -25,10 +25,10 @@ export default function PesanTiket() {
 
     const [calendarModal, setCalendarModal] = useState({
         isOpen: false,
-        type: '', // 'berangkat' atau 'pulang'
-        selectedDate: new Date(), // Today's date
-        selectedReturnDate: null, // Tanggal pulang
-        currentMonth: new Date() // Current month
+        type: '',
+        selectedDate: new Date(),
+        selectedReturnDate: null,
+        currentMonth: new Date()
     });
 
     const [filterModal, setFilterModal] = useState({
@@ -43,7 +43,6 @@ export default function PesanTiket() {
         isOpen: false
     });
 
-    // State untuk data stasiun dari API
     const [stations, setStations] = useState([]);
     const [allStations, setAllStations] = useState([]);
     const [recentSearches, setRecentSearches] = useState([]);
@@ -181,7 +180,7 @@ export default function PesanTiket() {
     );
 
     const handleBack = () => {
-        router.visit('/public/dashboard');
+        router.visit('/user/dashboard');
     };
 
     const handleInputChange = (field, value) => {

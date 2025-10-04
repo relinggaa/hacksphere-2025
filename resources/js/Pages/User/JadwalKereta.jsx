@@ -20,17 +20,14 @@ export default function JadwalKereta({ searchData = {}, schedules = [], hasResul
         trainData: null
     });
     
-    // Debug: Log the received props
     console.log('JadwalKereta - props:', { searchData, schedules, hasResults, totalResults, error, filters });
     
-    // Set initial selectedDate when component mounts
     useEffect(() => {
         if (searchData.tanggal) {
             setSelectedDate(searchData.tanggal);
         }
     }, [searchData.tanggal]);
 
-    // Generate date options (selected date + 7 days)
     const generateDateOptions = () => {
         const dates = [];
         const startDate = searchData.tanggal ? new Date(searchData.tanggal) : new Date();

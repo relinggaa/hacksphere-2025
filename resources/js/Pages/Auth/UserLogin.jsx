@@ -9,40 +9,27 @@ export default function UserLogin() {
     });
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
-    const [formKey, setFormKey] = useState(Date.now()); // Key untuk force re-render
+    const [formKey, setFormKey] = useState(Date.now());
 
-    // Reset session dan clear form saat component mount
     useEffect(() => {
-        // Clear localStorage
         localStorage.clear();
-        
-        // Clear sessionStorage
         sessionStorage.clear();
         
-        // Clear any cookies related to authentication
         document.cookie.split(";").forEach(function(c) { 
             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
         });
         
-        // Force clear form dengan timeout untuk memastikan DOM sudah ready
         setTimeout(() => {
-            // Reset form data ke nilai kosong
             setData({
                 email: '',
                 password: '',
                 remember: false
             });
             
-            // Clear errors
             setErrors({});
-            
-            // Reset processing state
             setProcessing(false);
-            
-            // Force re-render form
             setFormKey(Date.now());
             
-            // Clear any form elements directly
             const emailInput = document.querySelector('input[name="email"]');
             const passwordInput = document.querySelector('input[name="password"]');
             

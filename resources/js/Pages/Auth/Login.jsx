@@ -18,7 +18,6 @@ export default function Login() {
 
         router.post('/login', data, {
             onSuccess: (page) => {
-                // Show success alert
                 alert('Login berhasil! Selamat datang di KAI Access.');
             },
             onError: (errors) => {
@@ -42,7 +41,6 @@ export default function Login() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-                {/* Header */}
                 <div className="text-center mb-8">
                     <div className="bg-blue-600 text-white text-2xl font-bold py-3 px-6 rounded-lg mb-4 inline-block">
                         🚂 KAI Access

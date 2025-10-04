@@ -3,16 +3,13 @@ import React from 'react';
 export default function RoleSelection() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
                 <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
             </div>
             
-            {/* Main Container with Glassmorphism */}
             <div className="relative bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8 w-full max-w-4xl">
-                {/* Header */}
                 <div className="text-center mb-12">
                     <div className="relative inline-block mb-6">
                         <div className="bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 text-white text-3xl font-bold py-4 px-8 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300">
@@ -26,9 +23,7 @@ export default function RoleSelection() {
                     <p className="text-purple-100 text-lg">Silakan pilih role yang sesuai untuk melanjutkan perjalanan digital Anda</p>
                 </div>
 
-                {/* Role Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                    {/* Admin Card */}
                     <div className="group relative">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-red-400 to-pink-400 rounded-2xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
                         <div className="relative bg-white/20 backdrop-blur-sm rounded-2xl p-8 border border-white/30 hover:bg-white/30 transition-all duration-500 transform hover:scale-105">
@@ -56,7 +51,6 @@ export default function RoleSelection() {
                         </div>
                     </div>
 
-                    {/* User Card */}
                     <div className="group relative">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-2xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
                         <div className="relative bg-white/20 backdrop-blur-sm rounded-2xl p-8 border border-white/30 hover:bg-white/30 transition-all duration-500 transform hover:scale-105">
@@ -84,7 +78,6 @@ export default function RoleSelection() {
                         </div>
                     </div>
 
-                    {/* Porter Card */}
                     <div className="group relative">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-green-400 to-emerald-400 rounded-2xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
                         <div className="relative bg-white/20 backdrop-blur-sm rounded-2xl p-8 border border-white/30 hover:bg-white/30 transition-all duration-500 transform hover:scale-105">
@@ -113,7 +106,6 @@ export default function RoleSelection() {
                     </div>
                 </div>
 
-                {/* Features Info */}
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
                     <h4 className="font-bold text-white text-xl mb-8 text-center">Fitur Setiap Role</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -153,7 +145,6 @@ export default function RoleSelection() {
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="text-center mt-8">
                     <p className="text-white/70 text-sm">
                         Belum tahu role mana yang cocok? 

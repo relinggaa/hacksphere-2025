@@ -13,13 +13,12 @@ export default function TrainDetailModal({
 
     if (!isOpen || !trainData) return null;
 
-    // Helper functions
     const formatTime = (time) => {
-        return time || '21:29'; // Default jika tidak ada data
+        return time || '21:29';
     };
 
     const formatDate = (date) => {
-        if (!date) return '03 Okt 2025'; // Default
+        if (!date) return '03 Okt 2025';
         const dateObj = new Date(date);
         const day = dateObj.getDate().toString().padStart(2, '0');
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -39,7 +38,6 @@ export default function TrainDetailModal({
         const [hours, minutes] = departureTime.split(':').map(Number);
         date.setHours(hours, minutes, 0, 0);
         
-        // Parse duration (format: "08j 10m" or "3j 15m")
         const durationMatch = duration?.match(/(\d+)j\s*(\d+)?m?/);
         if (durationMatch) {
             const durHours = parseInt(durationMatch[1]);
@@ -47,7 +45,6 @@ export default function TrainDetailModal({
             
             date.setHours(date.getHours() + durHours, date.getMinutes() + durMinutes, 0, 0);
         } else {
-            // Default duration: tambah 3 jam 15 menit
             date.setHours(date.getHours() + 3, date.getMinutes() + 15, 0, 0);
         }
         

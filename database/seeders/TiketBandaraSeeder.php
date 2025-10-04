@@ -8,16 +8,11 @@ use Illuminate\Database\Seeder;
 
 class TiketBandaraSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Ambil beberapa kereta dari database yang sudah ada
         $keretas = Kereta::limit(3)->get();
 
         if ($keretas->isEmpty()) {
-            // Jika belum ada kereta, buat sample kereta untuk bandara
             $keretas = collect([
                 ['nama_kereta' => 'Airport Express Jakarta', 'kelas' => 'Ekonomi'],
                 ['nama_kereta' => 'Airport Express Bandung', 'kelas' => 'Ekonomi'],

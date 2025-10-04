@@ -16,7 +16,6 @@ export default function AdminLogin() {
         setErrors({});
 
         router.post('/admin/login', data, {
-          
             onError: (errors) => {
                 setErrors(errors);
                 setProcessing(false);
@@ -37,10 +36,8 @@ export default function AdminLogin() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
-            {/* Left Side - Login Form */}
             <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8">
-                    {/* Logo */}
                     <div className="flex items-center">
                         <div className="flex items-center space-x-2">
                             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">

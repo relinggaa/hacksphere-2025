@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Porter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,13 +18,11 @@ class AuthController extends Controller
         return Inertia::render('Auth/RoleSelection');
     }
 
- 
     public function showAdminLogin()
     {
         return Inertia::render('Auth/AdminLogin');
     }
 
-   
     public function showAdminRegister()
     {
         return Inertia::render('Auth/AdminRegister');
@@ -34,17 +33,16 @@ class AuthController extends Controller
         return Inertia::render('Auth/UserLogin');
     }
 
- 
     public function showUserRegister()
     {
         return Inertia::render('Auth/UserRegister');
     }
 
-  
     public function showPorterLogin()
     {
         return Inertia::render('Auth/PorterLogin');
     }
+
 
 
     public function showPorterRegister()
@@ -52,27 +50,53 @@ class AuthController extends Controller
         return Inertia::render('Auth/PorterRegister');
     }
 
- 
     public function adminLogin(Request $request)
     {
         return $this->handleRoleLogin($request, 'admin');
     }
 
-   
     public function userLogin(Request $request)
     {
         return $this->handleRoleLogin($request, 'user');
     }
 
- 
     public function porterLogin(Request $request)
     {
         return $this->handleRoleLogin($request, 'porter');
     }
 
-   
     private function handleRoleLogin(Request $request, string $role)
     {
+        if ($role === 'porter') {
+            $request->validate([
+                'email' => 'required|email',
+                'key' => 'required|string',
+            ]);
+
+            $porter = Porter::where('email', $request->email)
+                           ->where('keylogin', $request->key)
+                           ->first();
+
+            if (!$porter) {
+                throw ValidationException::withMessages([
+                    'email' => ['Email atau key tidak sesuai untuk Porter.'],
+                ]);
+            }
+
+            Auth::guard('porter')->login($porter, $request->boolean('remember'));
+            $request->session()->regenerate();
+
+            \Log::info('Porter login successful', [
+                'porter_id' => $porter->id,
+                'porter_name' => $porter->name,
+                'redirect_to' => route('porter.dashboard'),
+                'session_id' => $request->session()->getId(),
+                'auth_porter_check' => auth('porter')->check()
+            ]);
+
+            return redirect()->route('porter.dashboard');
+        }
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -95,18 +119,15 @@ class AuthController extends Controller
         return redirect($this->getRedirectUrl($user->role));
     }
 
- 
     public function adminRegister(Request $request)
     {
         return $this->handleRoleRegister($request, 'admin');
     }
 
-   
     public function userRegister(Request $request)
     {
         return $this->handleRoleRegister($request, 'user');
     }
-
 
     public function porterRegister(Request $request)
     {
@@ -137,7 +158,12 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        // Check if porter is logged in
+        if (Auth::guard('porter')->check()) {
+            Auth::guard('porter')->logout();
+        } else {
+            Auth::logout();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -156,8 +182,6 @@ class AuthController extends Controller
         };
     }
 
-
-  
     public function dashboard()
     {
         $user = Auth::user();

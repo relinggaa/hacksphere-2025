@@ -13,13 +13,12 @@ export default function CalendarModal({
     onOpenFilter,
     onSwitchCalendarType, 
     routeAvailability,
-    priceData, // Sekarang berasal dari database
+    priceData,
     selectedPrices,
     savedStations
 }) {
     if (!isOpen) return null;
 
-    // Helper functions
     const getDaysInMonth = (date) => {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
     };
@@ -38,7 +37,6 @@ export default function CalendarModal({
         return routeAvailability[dateKey] === true;
     };
 
-    // Get price to display based on filter selection (data dari database)
     const getPriceToDisplay = (date) => {
         const dateKey = date.toISOString().split('T')[0];
         const prices = priceData[dateKey];
@@ -46,8 +44,6 @@ export default function CalendarModal({
         if (!prices || !selectedPrices || selectedPrices.length === 0) {
             return null;
         }
-
-        // Check if user selected price sorting
         if (selectedPrices.includes('termahal')) {
             return `${prices.max}k`;
         } else if (selectedPrices.includes('termurah')) {

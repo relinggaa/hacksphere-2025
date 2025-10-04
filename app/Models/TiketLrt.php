@@ -23,7 +23,7 @@ class TiketLrt extends Model
 
     protected $casts = [
         'tanggal' => 'datetime',
-        'harga_termurah' => 'string', // Sesuai schema bahwa harga_termurah adalah string
+        'harga_termurah' => 'string',
         'penumpang' => 'integer'
     ];
 }

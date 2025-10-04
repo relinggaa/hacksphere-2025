@@ -4,7 +4,7 @@ import { router } from '@inertiajs/react';
 export default function PorterLogin() {
     const [data, setData] = useState({
         email: '',
-        password: '',
+        key: '',
         remember: false
     });
     const [errors, setErrors] = useState({});
@@ -17,8 +17,12 @@ export default function PorterLogin() {
 
         router.post('/porter/login', data, {
             onSuccess: (page) => {
-                // Show success alert
                 alert('Login berhasil! Selamat datang di Portal Porter KAI Access.');
+                
+                console.log('Login successful, redirecting to dashboard...');
+                console.log('Current URL:', window.location.href);
+                
+                window.location.href = '/porter/dashboard';
             },
             onError: (errors) => {
                 setErrors(errors);
@@ -39,83 +43,128 @@ export default function PorterLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-600 to-green-800 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="bg-green-600 text-white text-2xl font-bold py-3 px-6 rounded-lg mb-4 inline-block">
-                        🚂 KAI Access
+        <div className="min-h-screen bg-gray-50">
+            <div className="bg-green-500 px-4 pt-12 pb-6 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-2xl">🚂</span>
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold text-white">KAI Access</h1>
+                            <p className="text-green-100 text-sm">Portal Porter</p>
+                        </div>
                     </div>
-                    <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg mb-4 inline-flex items-center">
-                        <span className="text-xl mr-2">🎒</span>
-                        <span className="font-semibold">Portal Porter</span>
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                        </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">Login Porter</h2>
-                    <p className="text-gray-600 mt-2">Masuk untuk melayani penumpang dan mengelola pesanan</p>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="px-4 py-6">
+                {/* Welcome Card */}
+                <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-100">
+                    <div className="text-center">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-3xl">🎒</span>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Selamat Datang Porter</h2>
+                        <p className="text-gray-600">Masuk untuk melayani penumpang dan mengelola pesanan</p>
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Email Porter
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={data.email}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            placeholder="porter@kai.com"
-                            required
-                        />
-                        {errors.email && (
-                            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                        )}
-                    </div>
+                {/* Login Form Card */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Email */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-800 mb-3">
+                                Email Porter
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                    </svg>
+                                </div>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={data.email}
+                                    onChange={handleChange}
+                                    className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-lg"
+                                    placeholder="porter@kai.com"
+                                    required
+                                />
+                            </div>
+                            {errors.email && (
+                                <p className="text-red-500 text-sm mt-2">{errors.email}</p>
+                            )}
+                        </div>
 
-                    {/* Password */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={data.password}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            placeholder="Masukkan password porter"
-                            required
-                        />
-                        {errors.password && (
-                            <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-                        )}
-                    </div>
+                        {/* Key */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-800 mb-3">
+                                Key Login
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                </div>
+                                <input
+                                    type="text"
+                                    name="key"
+                                    value={data.key}
+                                    onChange={handleChange}
+                                    className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-lg"
+                                    placeholder="Masukkan key login porter"
+                                    required
+                                />
+                            </div>
+                            {errors.key && (
+                                <p className="text-red-500 text-sm mt-2">{errors.key}</p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-2">
+                                Key login diberikan saat pendaftaran porter
+                            </p>
+                        </div>
 
-                    {/* Remember Me */}
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            name="remember"
-                            checked={data.remember}
-                            onChange={handleChange}
-                            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                        />
-                        <label className="ml-2 block text-sm text-gray-700">
-                            Ingat saya
-                        </label>
-                    </div>
+                        {/* Remember Me */}
+                        <div className="flex items-center">
+                            <input
+                                type="checkbox"
+                                name="remember"
+                                checked={data.remember}
+                                onChange={handleChange}
+                                className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                            />
+                            <label className="ml-3 block text-sm font-medium text-gray-700">
+                                Ingat saya
+                            </label>
+                        </div>
 
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {processing ? 'Memproses...' : 'Masuk ke Portal Porter'}
-                    </button>
-                </form>
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-lg"
+                        >
+                            {processing ? (
+                                <div className="flex items-center justify-center space-x-2">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                    <span>Memproses...</span>
+                                </div>
+                            ) : (
+                                'Masuk ke Portal Porter'
+                            )}
+                        </button>
+                    </form>
+                </div>
 
                 {/* Links */}
                 <div className="mt-6 space-y-4">
@@ -141,24 +190,11 @@ export default function PorterLogin() {
                     </div>
                 </div>
 
-                {/* Porter Info */}
-                <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                    <h4 className="font-medium text-green-800 mb-2">Layanan Porter:</h4>
-                    <ul className="text-sm text-green-700 space-y-1">
-                        <li>🎒 Bantuan angkut bagasi</li>
-                        <li>🚶‍♂️ Antar penumpang ke peron</li>
-                        <li>💰 Kelola pendapatan harian</li>
-                        <li>📱 Terima pesanan real-time</li>
-                        <li>⭐ Sistem rating dan review</li>
-                    </ul>
-                </div>
-
-                {/* Working Hours */}
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-800 text-sm">
-                        <strong>Jam Operasional:</strong> 05:00 - 23:00 WIB
-                    </p>
-                </div>
+                {/* Info Cards */}
+          
+                    {/* Porter Services */}
+                            
+             
             </div>
         </div>
     );

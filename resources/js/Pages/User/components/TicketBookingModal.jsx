@@ -23,7 +23,6 @@ export default function TicketBookingModal({
 
     if (!isOpen || !trainData) return null;
 
-    // Helper functions
     const formatDate = (date) => {
         if (!date) return 'Fri, 03 Oct 2025';
         const dateObj = new Date(date);
@@ -88,18 +87,6 @@ export default function TicketBookingModal({
         setShowUploadModal(false);
     };
 
-    // Handle group selection
-    const handleGroupSelect = (group) => {
-        if (group && group.passengers && group.passengers.length > 0) {
-            // Use the first passenger as default
-            const firstPassenger = group.passengers[0];
-            setOrderDetails(prev => ({
-                ...prev,
-                name: firstPassenger.name,
-                nik: firstPassenger.nik
-            }));
-        }
-    };
 
     // Handle manage groups
     const handleManageGroups = () => {
@@ -252,15 +239,6 @@ export default function TicketBookingModal({
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Details</h3>
                     
-                    {/* Group Selector */}
-                    <div className="mb-6">
-                        <GroupSelector 
-                            onGroupSelect={handleGroupSelect}
-                            onManageGroups={handleManageGroups}
-                        />
-                    </div>
-                    
-                    {/* Passenger Information */}
                     <div className="space-y-4">
                         {/* Name */}
                         <div>
@@ -314,6 +292,18 @@ export default function TicketBookingModal({
                             </label>
                         </div>
                     </div>
+
+                    {/* Group Selector */}
+                    <div className="mb-6">
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <GroupSelector 
+                                onManageGroups={handleManageGroups}
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* Passenger Information */}
+
 
                     {/* Information Notice */}
                     <div className="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg mt-4 text-sm">

@@ -163,12 +163,14 @@ export default function AdminDashboard({ user }) {
         status: 'OFFLINE',
         keylogin: '',
         no_telepon: '',
-        no_identitas: ''
+        no_identitas: '',
+        photo: null
     });
     const [porterProcessing, setPorterProcessing] = useState(false);
     const [porters, setPorters] = useState([]);
     const [loadingPorters, setLoadingPorters] = useState(false);
     const [editingPorter, setEditingPorter] = useState(null);
+    const [porterPhotoPreview, setPorterPhotoPreview] = useState(null);
     
     // Pagination states for porters
     const [currentPorterPage, setCurrentPorterPage] = useState(1);
@@ -600,6 +602,49 @@ export default function AdminDashboard({ user }) {
         }
     };
 
+    const handlePorterPhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                toast.error('❌ File harus berupa gambar', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('❌ Ukuran file maksimal 5MB', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+                return;
+            }
+
+            setPorterData(prev => ({
+                ...prev,
+                photo: file
+            }));
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setPorterPhotoPreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removePorterPhoto = () => {
+        setPorterData(prev => ({
+            ...prev,
+            photo: null
+        }));
+        setPorterPhotoPreview(null);
+    };
+
 
     const handlePorterSubmit = async (e) => {
         e.preventDefault();
@@ -610,14 +655,26 @@ export default function AdminDashboard({ user }) {
             // Get CSRF token from meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('name', porterData.name);
+            formData.append('email', porterData.email);
+            formData.append('status', porterData.status);
+            formData.append('keylogin', porterData.keylogin);
+            formData.append('no_telepon', porterData.no_telepon);
+            formData.append('no_identitas', porterData.no_identitas);
+            
+            if (porterData.photo) {
+                formData.append('photo', porterData.photo);
+            }
+            
             const response = await fetch('/api/porters', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify(porterData)
+                body: formData
             });
 
             const data = await response.json();
@@ -642,8 +699,10 @@ export default function AdminDashboard({ user }) {
                     status: 'OFFLINE',
                     keylogin: '',
                     no_telepon: '',
-                    no_identitas: ''
+                    no_identitas: '',
+                    photo: null
                 });
+                setPorterPhotoPreview(null);
                 setErrors({}); // Clear any previous errors
                 setEditingPorter(null);
                 fetchPorters();
@@ -674,8 +733,10 @@ export default function AdminDashboard({ user }) {
             status: porter.status,
             keylogin: porter.keylogin,
             no_telepon: porter.no_telepon,
-            no_identitas: porter.no_identitas
+            no_identitas: porter.no_identitas,
+            photo: null
         });
+        setPorterPhotoPreview(porter.photo_url || null);
         setShowPorterModal(true);
         setErrors({});
         toast.info('✏️ Mode edit porter', {
@@ -699,14 +760,27 @@ export default function AdminDashboard({ user }) {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('name', porterData.name);
+            formData.append('email', porterData.email);
+            formData.append('status', porterData.status);
+            formData.append('keylogin', porterData.keylogin);
+            formData.append('no_telepon', porterData.no_telepon);
+            formData.append('no_identitas', porterData.no_identitas);
+            formData.append('_method', 'PUT');
+            
+            if (porterData.photo) {
+                formData.append('photo', porterData.photo);
+            }
+            
             const response = await fetch(`/api/porters/${editingPorter.id}`, {
-                method: 'PUT',
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify(porterData)
+                body: formData
             });
 
             const data = await response.json();
@@ -729,8 +803,10 @@ export default function AdminDashboard({ user }) {
                     status: 'OFFLINE',
                     keylogin: '',
                     no_telepon: '',
-                    no_identitas: ''
+                    no_identitas: '',
+                    photo: null
                 });
+                setPorterPhotoPreview(null);
                 setEditingPorter(null);
                 setShowPorterModal(false);
                 setErrors({});
@@ -3922,8 +3998,10 @@ export default function AdminDashboard({ user }) {
                                         status: 'OFFLINE',
                                         keylogin: '',
                                         no_telepon: '',
-                                        no_identitas: ''
+                                        no_identitas: '',
+                                        photo: null
                                     });
+                                    setPorterPhotoPreview(null);
                                     setEditingPorter(null);
                                     setErrors({});
                                 }}
@@ -4061,6 +4139,73 @@ export default function AdminDashboard({ user }) {
                                 )}
                             </div>
 
+                            {/* Upload Foto */}
+                            <div>
+                                <label htmlFor="photo" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Foto Porter
+                                </label>
+                                <div className="space-y-3">
+                                    {/* File Input */}
+                                    <div className="flex items-center space-x-3">
+                                        <input
+                                            type="file"
+                                            id="photo"
+                                            name="photo"
+                                            accept="image/*"
+                                            onChange={handlePorterPhotoChange}
+                                            className="hidden"
+                                        />
+                                        <label
+                                            htmlFor="photo"
+                                            className="flex-1 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-amber-500 hover:bg-amber-50 transition-colors"
+                                        >
+                                            <div className="text-center">
+                                                <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    {porterData.photo ? 'Ganti foto' : 'Pilih foto porter'}
+                                                </p>
+                                                <p className="text-xs text-gray-500">JPG, PNG maksimal 5MB</p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    {/* Photo Preview */}
+                                    {porterPhotoPreview && (
+                                        <div className="relative">
+                                            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                                <img
+                                                    src={porterPhotoPreview}
+                                                    alt="Preview foto porter"
+                                                    className="w-16 h-16 object-cover rounded-lg"
+                                                />
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-medium text-gray-900">Foto terpilih</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {porterData.photo?.name || 'Foto porter'}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={removePorterPhoto}
+                                                    className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Error Message */}
+                                    {errors.photo && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.photo}</p>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Form Actions */}
                             <div className="flex items-center justify-end space-x-3 pt-4">
                                 <button
@@ -4073,8 +4218,10 @@ export default function AdminDashboard({ user }) {
                                             status: 'OFFLINE',
                                             keylogin: '',
                                             no_telepon: '',
-                                            no_identitas: ''
+                                            no_identitas: '',
+                                            photo: null
                                         });
+                                        setPorterPhotoPreview(null);
                                         setEditingPorter(null);
                                         setErrors({});
                                     }}

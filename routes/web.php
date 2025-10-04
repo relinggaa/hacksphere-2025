@@ -41,6 +41,40 @@ Route::middleware('guest')->group(function () {
     Route::post('/porter/login', [AuthController::class, 'porterLogin']);
     Route::post('/porter/register', [AuthController::class, 'porterRegister']);
     
+    // Porter Dashboard routes
+    Route::get('/porter/dashboard', function () {
+        \Log::info('Porter dashboard accessed', [
+            'porter_authenticated' => auth('porter')->check(),
+            'porter_id' => auth('porter')->id(),
+            'session_id' => session()->getId(),
+            'all_guards' => [
+                'web' => auth('web')->check(),
+                'porter' => auth('porter')->check()
+            ]
+        ]);
+        
+        // Check if porter is authenticated
+        if (!auth('porter')->check()) {
+            \Log::warning('Porter not authenticated, redirecting to login');
+            return redirect('/porter/login');
+        }
+        
+        $porter = \App\Models\Porter::where('id', auth('porter')->id())->first();
+        $orders = \App\Models\PorterOrder::where('porter_id', auth('porter')->id())
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return Inertia::render('Dashboard/Porter', [
+            'user' => auth('porter')->user(),
+            'porter' => $porter,
+            'orders' => $orders
+        ]);
+    })->name('porter.dashboard');
+    
+    Route::post('/porter/update-status', [PorterController::class, 'updateStatus'])->name('porter.update-status');
+    Route::post('/porter/order-action', [PorterController::class, 'orderAction'])->name('porter.order-action');
+    
     // Generic routes (redirect to role selection)
     Route::get('/login', [AuthController::class, 'showUserLogin'])->name('login');
     Route::get('/register', [AuthController::class, 'showRegisterUser'])->name('register');
@@ -52,7 +86,6 @@ Route::middleware('auth')->group(function () {
     // Dashboard routes based on role
     Route::get('/admin/dashboard', [AuthController::class, 'dashboard'])->middleware('role:admin');
     Route::get('/user/dashboard', [AuthController::class, 'dashboard'])->middleware('role:user');
-    Route::get('/porter/dashboard', [AuthController::class, 'dashboard'])->middleware('role:porter');
     
     // User specific routes
     Route::middleware('role:user')->group(function () {
@@ -66,9 +99,108 @@ Route::middleware('auth')->group(function () {
             ]);
         })->name('user.jadwal-kereta');
         
+        Route::get('/user/booking-porter', function () {
+            $user = auth()->user();
+            \Log::info('Booking porter route - User auth check:', [
+                'user_authenticated' => auth()->check(),
+                'user_id' => $user ? $user->id : null,
+                'user_name' => $user ? $user->name : null,
+                'user_role' => $user ? $user->role : null,
+                'session_id' => session()->getId(),
+                'all_session_data' => session()->all()
+            ]);
+            
+            return Inertia::render('User/BookingPorter', [
+                'auth' => [
+                    'user' => $user
+                ]
+            ]);
+        })->name('user.booking-porter');
+        
         // API routes for user
         Route::get('/api/user/stations', [ApiStasiunController::class, 'index'])->name('api.user.stations');
         Route::get('/api/user/stations/all', [ApiStasiunController::class, 'all'])->name('api.user.stations.all');
+        
+        // Porter booking routes
+        Route::get('/api/porters/online', [PorterController::class, 'getOnlinePorters'])->name('api.porters.online');
+        Route::post('/api/porter-orders', [PorterController::class, 'createOrder'])->name('api.porter-orders.create');
+        
+        // User profile routes
+        Route::put('/user/profile', [UserController::class, 'updateProfile'])->name('user.profile.update');
+        Route::get('/user/profile', [UserController::class, 'getProfile'])->name('user.profile.get');
+        
+        // Test route untuk debug porter
+        Route::get('/api/debug/porters', function() {
+            $allPorters = \App\Models\Porter::all(['id', 'name', 'email', 'status', 'no_telepon', 'photo_url', 'no_identitas']);
+            $onlinePorters = \App\Models\Porter::where('status', 'ONLINE')->get(['id', 'name', 'email', 'status', 'no_telepon', 'photo_url', 'no_identitas']);
+            
+            return response()->json([
+                'success' => true,
+                'all_porters' => $allPorters,
+                'online_porters' => $onlinePorters,
+                'all_count' => $allPorters->count(),
+                'online_count' => $onlinePorters->count(),
+                'database_info' => [
+                    'table' => 'porters',
+                    'status_filter' => 'ONLINE'
+                ]
+            ]);
+        });
+        
+        // Route untuk menampilkan semua data porter dalam format HTML
+        Route::get('/debug/porters', function() {
+            $allPorters = \App\Models\Porter::all();
+            $onlinePorters = \App\Models\Porter::where('status', 'ONLINE')->get();
+            
+            $html = '<h1>Debug Porter Data</h1>';
+            $html .= '<h2>All Porters (' . $allPorters->count() . ')</h2>';
+            $html .= '<table border="1" style="border-collapse: collapse; width: 100%;">';
+            $html .= '<tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Phone</th><th>Photo URL</th><th>Photo Preview</th></tr>';
+            
+            foreach($allPorters as $porter) {
+                $html .= '<tr>';
+                $html .= '<td>' . $porter->id . '</td>';
+                $html .= '<td>' . $porter->name . '</td>';
+                $html .= '<td>' . $porter->email . '</td>';
+                $html .= '<td>' . $porter->status . '</td>';
+                $html .= '<td>' . $porter->no_telepon . '</td>';
+                $html .= '<td>' . ($porter->photo_url ? $porter->photo_url : 'No photo') . '</td>';
+                $html .= '<td>';
+                if ($porter->photo_url) {
+                    $html .= '<img src="' . $porter->photo_url . '" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.style.display=\'none\'">';
+                } else {
+                    $html .= 'No photo';
+                }
+                $html .= '</td>';
+                $html .= '</tr>';
+            }
+            $html .= '</table>';
+            
+            $html .= '<h2>Online Porters (' . $onlinePorters->count() . ')</h2>';
+            $html .= '<table border="1" style="border-collapse: collapse; width: 100%;">';
+            $html .= '<tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Phone</th><th>Photo URL</th><th>Photo Preview</th></tr>';
+            
+            foreach($onlinePorters as $porter) {
+                $html .= '<tr>';
+                $html .= '<td>' . $porter->id . '</td>';
+                $html .= '<td>' . $porter->name . '</td>';
+                $html .= '<td>' . $porter->email . '</td>';
+                $html .= '<td>' . $porter->status . '</td>';
+                $html .= '<td>' . $porter->no_telepon . '</td>';
+                $html .= '<td>' . ($porter->photo_url ? $porter->photo_url : 'No photo') . '</td>';
+                $html .= '<td>';
+                if ($porter->photo_url) {
+                    $html .= '<img src="' . $porter->photo_url . '" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.style.display=\'none\'">';
+                } else {
+                    $html .= 'No photo';
+                }
+                $html .= '</td>';
+                $html .= '</tr>';
+            }
+            $html .= '</table>';
+            
+            return $html;
+        });
   
         // API routes untuk chatbot
         Route::post('/api/user/chatbot/chat', [ChatbotController::class, 'chat'])->name('api.user.chatbot.chat');
@@ -161,7 +293,8 @@ Route::get('/public/jadwal-kereta', [App\Http\Controllers\User\JadwalKeretaContr
 
 Route::get('/public/profile', function () {
     return Inertia::render('User/Profile', [
-        'auth' => auth()->user()
+        'auth' => auth()->user(),
+        'user' => auth()->user()
     ]);
 })->name('public.profile');
 

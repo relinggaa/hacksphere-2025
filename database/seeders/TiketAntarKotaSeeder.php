@@ -7,16 +7,11 @@ use App\Models\TiketAntarKota;
 
 class TiketAntarKotaSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Clear existing data to prevent duplicates on re-run
         TiketAntarKota::truncate();
 
         $tikets = [
-            // ===== RUTE JAKARTA - BANDUNG =====
             [
                 'nama_kereta' => 'ARGO PARAHYANGAN (104)',
                 'kelas' => 'Eksekutif',
